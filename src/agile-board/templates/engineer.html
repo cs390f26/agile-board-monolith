@@ -2,8 +2,136 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Engineer Dashboard</title>
+    <link rel="stylesheet" href="../static/engineer.css">
 </head>
 <body>
+<header>
+    <div>
+        <h1>Liam's tasks</h1>
+        <p>Drag a ticket to a new lane to update its status</p>
+    </div>
+    <a class="dashboard-btn" href="index.html">Dashboard</a>
+</header>
+
+<main>
+    <div class="notebook">
+        <section class="lane">
+            <div class="lane-head">
+                <h2>Backlog</h2>
+                <span class="count" id="count-backlog">0</span>
+            </div>
+            <div class="dropzone" id="backlog" data-status="backlog"></div>
+        </section>
+
+        <section class="lane">
+            <div class="lane-head">
+                <h2>In progress</h2>
+                <span class="count" id="count-inprogress">0</span>
+            </div>
+            <div class="dropzone" id="inprogress" data-status="inprogress"></div>
+        </section>
+
+        <section class="lane">
+            <div class="lane-head">
+                <h2>Done</h2>
+                <span class="count" id="count-done">0</span>
+            </div>
+            <div class="dropzone" id="done" data-status="done"></div>
+        </section>
+    </div>
+</main>
+
+<script>
+    // Dummy data. Swap this for a fetch() to your backend later.
+    const tasks = [
+        { id: 1, title: "Design database schema", status: "backlog" },
+        { id: 2, title: "Set up CI pipeline", status: "backlog" },
+        { id: 3, title: "Write API documentation", status: "backlog" },
+        { id: 4, title: "Add rate limiting to login", status: "backlog" },
+        { id: 5, title: "Implement auth endpoints", status: "inprogress" },
+        { id: 6, title: "Build ticket list component", status: "inprogress" },
+        { id: 7, title: "Configure Terraform state bucket", status: "done" },
+        { id: 8, title: "Create project repo", status: "done" }
+    ];
+
+    const zones = document.querySelectorAll(".dropzone");
+
+    function buildCard(task) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.draggable = true;
+        card.dataset.id = task.id;
+
+        const label = document.createElement("span");
+        label.textContent = task.title;
+        card.appendChild(label);
+
+        card.addEventListener("dragstart", () => card.classList.add("dragging"));
+        card.addEventListener("dragend", () => {
+            card.classList.remove("dragging");
+            zones.forEach(z => z.classList.remove("over"));
+            syncBoard();
+        });
+        return card;
+    }
+
+    // Find the card the dragged item should be inserted before (top to bottom)
+    function cardAfterCursor(zone, y) {
+        const others = [...zone.querySelectorAll(".card:not(.dragging)")];
+        let closest = { offset: Number.NEGATIVE_INFINITY, el: null };
+        others.forEach(el => {
+            const box = el.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) closest = { offset, el };
+        });
+        return closest.el;
+    }
+
+    zones.forEach(zone => {
+        zone.addEventListener("dragover", e => {
+            e.preventDefault();
+            zone.classList.add("over");
+            const dragging = document.querySelector(".dragging");
+            if (!dragging) return;
+            const empty = zone.querySelector(".empty");
+            if (empty) empty.remove();
+            const next = cardAfterCursor(zone, e.clientY);
+            if (next) zone.insertBefore(dragging, next);
+            else zone.appendChild(dragging);
+        });
+        zone.addEventListener("dragleave", e => {
+            if (!zone.contains(e.relatedTarget)) zone.classList.remove("over");
+        });
+        zone.addEventListener("drop", e => e.preventDefault());
+    });
+
+    // Update task statuses, refresh counts and empty states
+    function syncBoard() {
+        zones.forEach(zone => {
+            const cards = zone.querySelectorAll(".card");
+            cards.forEach(card => {
+                const task = tasks.find(t => String(t.id) === card.dataset.id);
+                if (task) task.status = zone.dataset.status;
+            });
+            document.getElementById("count-" + zone.id).textContent = cards.length;
+
+            let empty = zone.querySelector(".empty");
+            if (cards.length === 0 && !empty) {
+                empty = document.createElement("div");
+                empty.className = "empty";
+                empty.textContent = "No tickets here";
+                zone.appendChild(empty);
+            } else if (cards.length > 0 && empty) {
+                empty.remove();
+            }
+        });
+    }
+    tasks.forEach(task => {
+        document.getElementById(task.status).appendChild(buildCard(task));
+    });
+    syncBoard();
+</script>
 </body>
 </html>
