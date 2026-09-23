@@ -2,8 +2,126 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manager Dashboard</title>
+    <link rel="stylesheet" href="../static/index.css">
 </head>
 <body>
+<header>
+    <div>
+        <h1>Project Dashboard</h1>
+        <p>Overview of every engineer's tickets</p>
+    </div>
+    <div class="header-controls">
+        <div class="manager-info">
+            <span class="label">Manager</span>
+            <span class="manager-name" id="manager-name">Jordan Ellis</span>
+        </div>
+        <div class="engineer-select">
+            <span class="label" for="engineer-filter">Engineer</span>
+            <select id="engineer-filter">
+                <option value="all">All engineers</option>
+            </select>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="notebook">
+        <section class="lane">
+            <div class="lane-head">
+                <h2>Backlog</h2>
+                <span class="count" id="count-backlog">0</span>
+            </div>
+            <div class="dropzone" id="backlog" data-status="backlog"></div>
+        </section>
+
+        <section class="lane">
+            <div class="lane-head">
+                <h2>In progress</h2>
+                <span class="count" id="count-inprogress">0</span>
+            </div>
+            <div class="dropzone" id="inprogress" data-status="inprogress"></div>
+        </section>
+
+        <section class="lane">
+            <div class="lane-head">
+                <h2>Done</h2>
+                <span class="count" id="count-done">0</span>
+            </div>
+            <div class="dropzone" id="done" data-status="done"></div>
+        </section>
+    </div>
+</main>
+
+<script>
+    // Dummy data. Swap this for a fetch() to your backend later.
+    const tasks = [
+        { id: 1, title: "Design database schema", status: "backlog", engineer: "Liam" },
+        { id: 2, title: "Set up CI pipeline", status: "backlog", engineer: "Liam" },
+        { id: 3, title: "Write API documentation", status: "backlog", engineer: "Priya" },
+        { id: 4, title: "Add rate limiting to login", status: "backlog", engineer: "Priya" },
+        { id: 5, title: "Implement auth endpoints", status: "inprogress", engineer: "Liam" },
+        { id: 6, title: "Build ticket list component", status: "inprogress", engineer: "Noah" },
+        { id: 7, title: "Configure Terraform state bucket", status: "done", engineer: "Noah" },
+        { id: 8, title: "Create project repo", status: "done", engineer: "Priya" },
+        { id: 9, title: "Design onboarding flow", status: "backlog", engineer: "Noah" },
+        { id: 10, title: "Fix flaky checkout test", status: "inprogress", engineer: "Priya" }
+    ];
+
+    const engineers = [...new Set(tasks.map(t => t.engineer))].sort();
+    const select = document.getElementById("engineer-filter");
+    engineers.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+    });
+
+    const zones = document.querySelectorAll(".dropzone");
+
+    function buildCard(task) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.id = task.id;
+
+        const label = document.createElement("span");
+        label.className = "card-title";
+        label.textContent = task.title;
+
+        const engineer = document.createElement("span");
+        engineer.className = "card-engineer";
+        engineer.textContent = task.engineer;
+
+        card.appendChild(label);
+        card.appendChild(engineer);
+        return card;
+    }
+
+    function renderBoard() {
+        const filter = select.value;
+        zones.forEach(zone => zone.innerHTML = "");
+
+        const visible = tasks.filter(t => filter === "all" || t.engineer === filter);
+
+        zones.forEach(zone => {
+            const status = zone.dataset.status;
+            const cards = visible.filter(t => t.status === status);
+            cards.forEach(task => zone.appendChild(buildCard(task)));
+
+            document.getElementById("count-" + zone.id).textContent = cards.length;
+
+            if (cards.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty";
+                empty.textContent = "No tickets here";
+                zone.appendChild(empty);
+            }
+        });
+    }
+
+    select.addEventListener("change", renderBoard);
+    renderBoard();
+</script>
 </body>
 </html>

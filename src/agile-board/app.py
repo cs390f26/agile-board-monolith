@@ -17,6 +17,3 @@ def create_app():
         return render_template('engineer.html', name=name)
 
     return app
-
-
-print("hello world")
