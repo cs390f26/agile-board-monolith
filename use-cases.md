@@ -3,22 +3,20 @@
 This system is an agile board for project managers and engineers. A **manager** creates tickets, assigns them to engineers, and monitors progress. An **engineer** works on the tickets assigned to them. Users pick a role by entering a name and a simple password; there are no other accounts.
 
 A **ticket** has a title, a description, a category (new feature or maintenance), an optional time limit, an assigned engineer, and a status. The status is always one of three lanes: **Backlog**, **In progress**, or **Done**. Lanes appear in that order everywhere.
-
 ---
 
 ## Access
 
 Someone opens the application and chooses who they are.
 
-They enter a name and a simple password. A manager lands on the project dashboard. An engineer lands on their own ticket board.
 
-If the name or password is missing or wrong, sign-in fails and they are told the input is invalid.
 
 ### Scenarios
 
-- **Manager sign-in** — Valid manager credentials. They open the project dashboard.
-- **Engineer sign-in** — Valid engineer credentials. They open that engineer's ticket board.
-- **Invalid input** — Missing or incorrect name or password. They stay on the sign-in page and see that the input is invalid.
+- **Manager access** -- Manager goes onto manager page.
+- **Engineer access** — Engineer goes onto Engineer page
+
+
 
 ---
 
@@ -26,7 +24,7 @@ If the name or password is missing or wrong, sign-in fails and they are told the
 
 A manager wants to see the state of all work.
 
-They see every ticket in three lanes (Backlog, In progress, Done). Each lane shows its ticket count. Each ticket shows its title and the engineer it is assigned to. The manager's name is shown in the top right.
+They see every ticket in three lanes (Backlog, In progress, Done). Each lane shows its ticket count. Each ticket shows its title and the engineer it is assigned to. The manager's name is shown in the top right. 
 
 When there are no tickets, each lane is empty.
 
@@ -95,7 +93,7 @@ If the title or engineer is missing, or the category is not one of the two allow
 
 An engineer wants to see their own work.
 
-They see only the tickets assigned to them, in the three lanes with a count on each. Tickets belonging to other engineers are never shown. A link takes them back to the sign-in page.
+They see only the tickets assigned to them, in the three lanes with a count on each. Tickets belonging to other engineers are never shown. A link takes them back to the dashboard page.
 
 ### Scenarios
 
