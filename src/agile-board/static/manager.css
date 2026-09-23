@@ -1,0 +1,366 @@
+:root {
+    --blue: #1b2f5b;
+    --blue-soft: #e8ecf5;
+    --blue-mid: #b9c3dc;
+    --amber: #f5b82e;
+    --amber-soft: #fdf1d3;
+    --white: #ffffff;
+    --green: #2f8f5b;
+    --green-soft: #e3f3ea;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--blue-soft);
+    color: var(--blue);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- Header ---------- */
+header {
+    background: var(--blue);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 4px solid var(--amber);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+header h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+header p {
+    font-size: 0.85rem;
+    color: var(--blue-mid);
+    margin-top: 2px;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.manager-info,
+.engineer-select {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--blue-mid);
+}
+
+.manager-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.engineer-select select {
+    background: var(--white);
+    color: var(--blue);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.engineer-select select:focus-visible {
+    outline: 2px solid var(--amber);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 9px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-primary {
+    background: var(--amber);
+    color: var(--blue);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+    background: var(--white);
+    outline: none;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--white);
+    border: 1px solid var(--blue-mid);
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+}
+
+/* ---------- Progress overview ---------- */
+.progress-overview {
+    background: var(--white);
+    border-bottom: 1px solid var(--blue-mid);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.progress-stats {
+    display: flex;
+    gap: 28px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--blue);
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--blue-mid);
+}
+
+.progress-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 220px;
+    flex: 1;
+    max-width: 360px;
+}
+
+.progress-bar-track {
+    flex: 1;
+    height: 10px;
+    background: var(--blue-soft);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--green);
+    border-radius: 999px;
+    transition: width 0.2s ease;
+}
+
+.progress-percent {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--blue);
+    white-space: nowrap;
+}
+
+/* ---------- Board ---------- */
+main {
+    flex: 1;
+    display: flex;
+    padding: 0;
+}
+
+.notebook {
+    flex: 1;
+    width: 100%;
+    background: var(--white);
+    border: none;
+    border-radius: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.lane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.lane + .lane {
+    border-left: 1px solid var(--blue-mid);
+}
+
+.lane-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 3px double var(--blue-mid);
+}
+
+.lane-head h2 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.count {
+    background: var(--blue);
+    color: var(--white);
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.dropzone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.card {
+    background: var(--blue-soft);
+    border: 1px solid var(--blue-mid);
+    border-left: 4px solid var(--blue);
+    border-radius: 4px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.card-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.card-engineer {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--green-soft);
+    color: var(--green);
+}
+
+.card-engineer.unassigned {
+    background: var(--white);
+    color: var(--blue-mid);
+    border: 1px dashed var(--blue-mid);
+    font-style: italic;
+}
+
+.empty {
+    color: var(--blue-mid);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 16px 0;
+}
+
+/* ---------- Dialogs ---------- */
+dialog {
+    border: none;
+    border-radius: 10px;
+    padding: 0;
+    box-shadow: 0 12px 32px rgba(27, 47, 91, 0.25);
+    width: min(90vw, 380px);
+}
+
+dialog::backdrop {
+    background: rgba(27, 47, 91, 0.45);
+}
+
+.dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px;
+}
+
+.dialog-form h3 {
+    font-size: 1.05rem;
+    color: var(--blue);
+}
+
+.dialog-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--blue);
+}
+
+.dialog-form input,
+.dialog-form select {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 400;
+    padding: 8px 10px;
+    border: 1px solid var(--blue-mid);
+    border-radius: 6px;
+    color: var(--blue);
+    background: var(--white);
+}
+
+.dialog-form input:focus-visible,
+.dialog-form select:focus-visible {
+    outline: 2px solid var(--amber);
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.dialog-actions .btn-ghost {
+    background: transparent;
+    color: var(--blue);
+    border: 1px solid var(--blue-mid);
+}
+
+.dialog-actions .btn-ghost:hover,
+.dialog-actions .btn-ghost:focus-visible {
+    background: var(--blue-soft);
+}
+
+@media (max-width: 700px) {
+    header { padding: 14px 16px; }
+    .header-controls { width: 100%; justify-content: space-between; }
+    .progress-overview { padding: 14px 16px; }
+    .notebook { grid-template-columns: 1fr; }
+    .lane { min-height: 0; }
+    .lane + .lane { border-left: none; border-top: 1px solid var(--blue-mid); }
+}
