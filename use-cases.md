@@ -2,13 +2,12 @@
 
 This system is an agile board for project managers and engineers. A **manager** creates tickets, assigns them to engineers, and monitors progress. An **engineer** works on the tickets assigned to them. Users pick a role by entering a name and a simple password; there are no other accounts.
 
-A **ticket** has a title, a description, a category (new feature or maintenance), an optional time limit, an assigned engineer, and a status. The status is always one of three lanes: **Backlog**, **In progress**, or **Done**. Lanes appear in that order everywhere.
+A **ticket** has a title, a description, an assigned engineer, and a status. The status is always one of three lanes: **Backlog**, **In progress**, or **Done**. Lanes appear in that order everywhere.
 ---
 
 ## Access
 
 Someone opens the application and chooses who they are.
-
 
 
 ### Scenarios
@@ -72,10 +71,8 @@ A manager wants to give an engineer new work.
 They provide:
 
 - a title
-- a description
-- a category (new feature or maintenance)
 - an engineer to assign it to
-- optionally, a time limit
+- status of the task 
 
 The system creates the ticket in the Backlog and it appears on both the dashboard and the assigned engineer's board.
 
