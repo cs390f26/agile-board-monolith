@@ -3,257 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Manager Dashboard</title>
+    <title>Manager</title>
     <link rel="stylesheet" href="../static/manager.css">
 </head>
 <body>
 <header>
     <div>
-        <h1>Manager Dashboard</h1>
-        <p>Add engineers, assign tasks, and track progress across the team</p>
+        <h1>Manager</h1>
+        <p>Assign work and add engineers to the team</p>
     </div>
-    <div class="header-controls">
-        <div class="manager-info">
-            <span class="label">Manager</span>
-            <span class="manager-name" id="manager-name">Jordan Ellis</span>
-        </div>
-        <button class="btn btn-ghost" id="add-engineer-btn" type="button">+ Add engineer</button>
-        <button class="btn btn-primary" id="add-task-btn" type="button">+ Add task</button>
-        <div class="engineer-select">
-            <select id="engineer-filter">
-                <option value="all">All engineers</option>
-            </select>
-        </div>
-    </div>
+    <a class="dashboard-btn" href="index.html">Dashboard</a>
 </header>
 
-<section class="progress-overview">
-    <div class="progress-stats">
-        <div class="stat">
-            <span class="stat-value" id="stat-total">0</span>
-            <span class="stat-label">Total tasks</span>
-        </div>
-        <div class="stat">
-            <span class="stat-value" id="stat-backlog">0</span>
-            <span class="stat-label">Backlog</span>
-        </div>
-        <div class="stat">
-            <span class="stat-value" id="stat-inprogress">0</span>
-            <span class="stat-label">In progress</span>
-        </div>
-        <div class="stat">
-            <span class="stat-value" id="stat-done">0</span>
-            <span class="stat-label">Done</span>
-        </div>
-    </div>
-    <div class="progress-bar-wrap">
-        <div class="progress-bar-track">
-            <div class="progress-bar-fill" id="progress-fill"></div>
-        </div>
-        <span class="progress-percent" id="progress-percent">0% complete</span>
-    </div>
-</section>
-
 <main>
-    <div class="notebook">
-        <section class="lane">
-            <div class="lane-head">
-                <h2>Backlog</h2>
-                <span class="count" id="count-backlog">0</span>
-            </div>
-            <div class="dropzone" id="backlog" data-status="backlog"></div>
-        </section>
+    <section class="panel roster-panel">
+        <h2>Team</h2>
+        <div class="roster" id="roster"></div>
+    </section>
 
-        <section class="lane">
-            <div class="lane-head">
-                <h2>In progress</h2>
-                <span class="count" id="count-inprogress">0</span>
-            </div>
-            <div class="dropzone" id="inprogress" data-status="inprogress"></div>
-        </section>
+    <section class="panel forms-panel">
+        <div class="form-card">
+            <h2>Create task</h2>
+            <form id="create-task-form">
+                <label for="task-title">Title</label>
+                <input type="text" id="task-title" placeholder="e.g. Write API documentation" required>
+                <button type="submit">Create task</button>
+            </form>
+        </div>
 
-        <section class="lane">
-            <div class="lane-head">
-                <h2>Done</h2>
-                <span class="count" id="count-done">0</span>
-            </div>
-            <div class="dropzone" id="done" data-status="done"></div>
-        </section>
-    </div>
+        <div class="form-card">
+            <h2>Assign task</h2>
+            <form id="assign-task-form">
+                <label for="assign-task-select">Task</label>
+                <select id="assign-task-select" required></select>
+
+                <label for="assign-person-select">Engineer</label>
+                <select id="assign-person-select" required></select>
+
+                <button type="submit">Assign task</button>
+            </form>
+        </div>
+
+        <div class="form-card">
+            <h2>Add engineer</h2>
+            <form id="add-engineer-form">
+                <label for="engineer-name">Name</label>
+                <input type="text" id="engineer-name" placeholder="e.g. Jamell" required>
+
+                <button type="submit">Add engineer</button>
+            </form>
+        </div>
+    </section>
 </main>
 
-<!-- Add engineer dialog -->
-<dialog id="engineer-dialog">
-    <form id="engineer-form" class="dialog-form">
-        <h3>Add engineer</h3>
-        <label>Name
-            <input type="text" id="engineer-name-input" required placeholder="e.g. Amara Chen">
-        </label>
-        <div class="dialog-actions">
-            <button type="button" class="btn btn-ghost" data-close="engineer-dialog">Cancel</button>
-            <button type="submit" class="btn btn-primary">Add engineer</button>
-        </div>
-    </form>
-</dialog>
-
-<!-- Add task dialog -->
-<dialog id="task-dialog">
-    <form id="task-form" class="dialog-form">
-        <h3>Add task</h3>
-        <label>Title
-            <input type="text" id="task-title-input" required placeholder="e.g. Add pagination to tickets API">
-        </label>
-        <label>Assign to
-            <select id="task-engineer-input">
-                <option value="">Unassigned</option>
-            </select>
-        </label>
-        <label>Status
-            <select id="task-status-input">
-                <option value="backlog">Backlog</option>
-                <option value="inprogress">In progress</option>
-                <option value="done">Done</option>
-            </select>
-        </label>
-        <div class="dialog-actions">
-            <button type="button" class="btn btn-ghost" data-close="task-dialog">Cancel</button>
-            <button type="submit" class="btn btn-primary">Add task</button>
-        </div>
-    </form>
-</dialog>
-
 <script>
-    // Dummy data. Swap this for a fetch() to your backend later.
-    let engineers = ["Liam", "Priya", "Noah"];
-
-    let nextTaskId = 11;
-    let tasks = [
-        { id: 1, title: "Design database schema", status: "backlog", engineer: "Liam" },
-        { id: 2, title: "Set up CI pipeline", status: "backlog", engineer: "Liam" },
-        { id: 3, title: "Write API documentation", status: "backlog", engineer: "Priya" },
-        { id: 4, title: "Add rate limiting to login", status: "backlog", engineer: "Priya" },
-        { id: 5, title: "Implement auth endpoints", status: "inprogress", engineer: "Liam" },
-        { id: 6, title: "Build ticket list component", status: "inprogress", engineer: "Noah" },
-        { id: 7, title: "Configure Terraform state bucket", status: "done", engineer: "Noah" },
-        { id: 8, title: "Create project repo", status: "done", engineer: "Priya" },
-        { id: 9, title: "Design onboarding flow", status: "backlog", engineer: "Noah" },
-        { id: 10, title: "Fix flaky checkout test", status: "inprogress", engineer: "Priya" }
+    // Dummy data standing in for GET /api/summary_json and GET /api/people.
+    let people = [
+        { peopleId: "jamell", name: "Jamell" },
+        { peopleId: "alex", name: "Alex" }
     ];
 
-    const zones = document.querySelectorAll(".dropzone");
-    const filterSelect = document.getElementById("engineer-filter");
-    const taskEngineerSelect = document.getElementById("task-engineer-input");
-    const engineerDialog = document.getElementById("engineer-dialog");
-    const taskDialog = document.getElementById("task-dialog");
+    let tasks = [
+        { taskId: "t1", title: "Design database schema", peopleId: "jamell", status: "backlog" },
+        { taskId: "t2", title: "Set up CI pipeline", peopleId: "jamell", status: "backlog" },
+        { taskId: "t3", title: "Implement auth endpoints", peopleId: "jamell", status: "inprogress" },
+        { taskId: "t4", title: "Create project repo", peopleId: "jamell", status: "done" },
+        { taskId: "t5", title: "Write API documentation", peopleId: "alex", status: "backlog" },
+        { taskId: "t6", title: "Build ticket list component", peopleId: "alex", status: "inprogress" }
+    ];
 
-    function refreshEngineerControls() {
-        const options = engineers.map(name => `<option value="${name}">${name}</option>`).join("");
-        filterSelect.innerHTML = `<option value="all">All engineers</option>${options}`;
-        taskEngineerSelect.innerHTML = `<option value="">Unassigned</option>${options}`;
-    }
+    const statusLabel = { backlog: "Backlog", inprogress: "In progress", done: "Done" };
 
-    function buildCard(task) {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.dataset.id = task.id;
+    function renderRoster() {
+        const roster = document.getElementById("roster");
+        roster.innerHTML = "";
 
-        const title = document.createElement("span");
-        title.className = "card-title";
-        title.textContent = task.title;
+        people.forEach(person => {
+            const row = document.createElement("div");
+            row.className = "roster-row";
 
-        const engineer = document.createElement("span");
-        engineer.className = "card-engineer" + (task.engineer ? "" : " unassigned");
-        engineer.textContent = task.engineer || "Unassigned";
+            const name = document.createElement("div");
+            name.className = "roster-name";
+            name.textContent = person.name;
+            row.appendChild(name);
 
-        card.appendChild(title);
-        card.appendChild(engineer);
-        return card;
-    }
+            const taskList = document.createElement("div");
+            taskList.className = "roster-tasks";
 
-    function updateProgress(list) {
-        const total = list.length;
-        const backlog = list.filter(t => t.status === "backlog").length;
-        const inprogress = list.filter(t => t.status === "inprogress").length;
-        const done = list.filter(t => t.status === "done").length;
-        const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-
-        document.getElementById("stat-total").textContent = total;
-        document.getElementById("stat-backlog").textContent = backlog;
-        document.getElementById("stat-inprogress").textContent = inprogress;
-        document.getElementById("stat-done").textContent = done;
-        document.getElementById("progress-fill").style.width = percent + "%";
-        document.getElementById("progress-percent").textContent = percent + "% complete";
-    }
-
-    function renderBoard() {
-        const filter = filterSelect.value;
-        zones.forEach(zone => zone.innerHTML = "");
-
-        const visible = tasks.filter(t => filter === "all" || t.engineer === filter);
-
-        zones.forEach(zone => {
-            const cards = visible.filter(t => t.status === zone.dataset.status);
-            cards.forEach(task => zone.appendChild(buildCard(task)));
-
-            document.getElementById("count-" + zone.id).textContent = cards.length;
-
-            if (cards.length === 0) {
-                const empty = document.createElement("div");
+            const personTasks = tasks.filter(t => t.peopleId === person.peopleId);
+            if (personTasks.length === 0) {
+                const empty = document.createElement("span");
                 empty.className = "empty";
-                empty.textContent = "No tickets here";
-                zone.appendChild(empty);
+                empty.textContent = "No tasks assigned";
+                taskList.appendChild(empty);
+            } else {
+                personTasks.forEach(task => {
+                    const chip = document.createElement("span");
+                    chip.className = "chip chip-" + task.status;
+                    chip.textContent = task.title + " \u2022 " + statusLabel[task.status];
+                    taskList.appendChild(chip);
+                });
             }
-        });
 
-        updateProgress(visible);
+            row.appendChild(taskList);
+            roster.appendChild(row);
+        });
     }
 
-    // Dialog open/close wiring
-    document.getElementById("add-engineer-btn").addEventListener("click", () => engineerDialog.showModal());
-    document.getElementById("add-task-btn").addEventListener("click", () => taskDialog.showModal());
-
-    document.querySelectorAll("[data-close]").forEach(btn => {
-        btn.addEventListener("click", () => document.getElementById(btn.dataset.close).close());
-    });
-
-    [engineerDialog, taskDialog].forEach(dialog => {
-        dialog.addEventListener("click", e => {
-            if (e.target === dialog) dialog.close();
+    function renderFormOptions() {
+        const taskSelect = document.getElementById("assign-task-select");
+        taskSelect.innerHTML = "";
+        tasks.forEach(task => {
+            const opt = document.createElement("option");
+            opt.value = task.taskId;
+            opt.textContent = task.title;
+            taskSelect.appendChild(opt);
         });
-    });
 
-    // Add engineer
-    document.getElementById("engineer-form").addEventListener("submit", e => {
+        const personSelect = document.getElementById("assign-person-select");
+        personSelect.innerHTML = "";
+        people.forEach(person => {
+            const opt = document.createElement("option");
+            opt.value = person.peopleId;
+            opt.textContent = person.name;
+            personSelect.appendChild(opt);
+        });
+    }
+
+    function renderAll() {
+        renderRoster();
+        renderFormOptions();
+    }
+
+    // Create task -- stands in for POST /api/task
+    document.getElementById("create-task-form").addEventListener("submit", e => {
         e.preventDefault();
-        const name = document.getElementById("engineer-name-input").value.trim();
-        if (!name) return;
-
-        engineers.push(name);
-        refreshEngineerControls();
-
-        e.target.reset();
-        engineerDialog.close();
-    });
-
-    // Add task
-    document.getElementById("task-form").addEventListener("submit", e => {
-        e.preventDefault();
-        const title = document.getElementById("task-title-input").value.trim();
-        const engineer = document.getElementById("task-engineer-input").value || null;
-        const status = document.getElementById("task-status-input").value;
+        const titleInput = document.getElementById("task-title");
+        const title = titleInput.value.trim();
         if (!title) return;
 
-        tasks.push({ id: nextTaskId++, title, status, engineer });
-        renderBoard();
+        tasks.push({
+            taskId: "t" + (tasks.length + 1),
+            title,
+            peopleId: null,
+            status: "backlog"
+        });
 
-        e.target.reset();
-        taskDialog.close();
+        titleInput.value = "";
+        renderAll();
+        // TODO: POST /api/task { title }
     });
 
-    filterSelect.addEventListener("change", renderBoard);
+    // Assign task -- stands in for POST /api/task/{taskId}/assign
+    document.getElementById("assign-task-form").addEventListener("submit", e => {
+        e.preventDefault();
+        const taskId = document.getElementById("assign-task-select").value;
+        const personId = document.getElementById("assign-person-select").value;
 
-    refreshEngineerControls();
-    renderBoard();
+        const task = tasks.find(t => t.taskId === taskId);
+        if (task) task.peopleId = personId;
+
+        renderAll();
+        // TODO: POST /api/task/{taskId}/assign { personId }
+    });
+
+    // Add engineer -- stands in for POST /api/people
+    document.getElementById("add-engineer-form").addEventListener("submit", e => {
+        e.preventDefault();
+        const nameInput = document.getElementById("engineer-name");
+        const name = nameInput.value.trim();
+        if (!name) return;
+
+        // Real backend generates peopleId; this is just a stand-in for the mockup.
+        const peopleId = "p" + (people.length + 1);
+        people.push({ peopleId, name });
+
+        nameInput.value = "";
+        renderAll();
+        // TODO: POST /api/people { name } -- server returns the generated peopleId
+    });
+
+    renderAll();
 </script>
 </body>
 </html>
