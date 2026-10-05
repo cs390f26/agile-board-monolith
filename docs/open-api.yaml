@@ -1,0 +1,253 @@
+openapi: 3.0.3
+info:
+  title: Project Tracker API
+  description: >
+    Trello style project tracking system. Documents the three server
+    rendered pages in app.py, plus the JSON API. Each page uses its own set
+    of API endpoints:
+  version: 0.1.0
+
+paths:
+  /:
+    get:
+      operationId: getIndexPage
+      summary: Dashboard page
+      description: >
+        Renders the overall progress dashboard: every engineer, their
+        assigned tasks, and each task's status.
+      tags:
+        - Pages
+      responses:
+        '200':
+          description: HTML dashboard page
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /manager:
+    get:
+      operationId: getManagerView
+      summary: Manager page
+      description: >
+        Renders the manager page: create a task, assign a task to an
+        engineer, view the engineer roster, and add a new engineer.
+      tags:
+        - Pages
+      responses:
+        '200':
+          description: HTML manager page
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /engineer/{name}:
+    get:
+      operationId: getEngineerView
+      summary: Engineer page
+      description: >
+        Renders one engineer's assigned tasks, grouped by status. Tasks are
+        loaded server-side when the page renders; only moving a task between
+        statuses goes through the API.
+      tags:
+        - Pages
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: The engineer's name, as it appears in the URL (e.g., "jamell").
+          schema:
+            type: string
+          example: jamell
+      responses:
+        '200':
+          description: HTML engineer page, rendered for the given engineer
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: No engineer found with the given name
+
+  # ---------- Dashboard API ----------
+
+  /api/summary_json:
+    get:
+      operationId: getSummary
+      summary: Get overall progress summary
+      description: >
+        Used only by the dashboard page. Returns every person with their
+        assigned tasks and each task's current status.
+      tags:
+        - Dashboard
+      responses:
+        '200':
+          description: Summary of all people and their tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonSummary'
+
+  # ---------- Engineer API ----------
+
+  /api/task/{taskId}/inprogress:
+    post:
+      operationId: moveTaskToInProgress
+      summary: Move a task to In Progress
+      description: Used only by the engineer page. Moves a task from Backlog to In Progress.
+      tags:
+        - Engineer
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task moved to In Progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+
+  /api/task/{taskId}/done:
+    post:
+      operationId: moveTaskToDone
+      summary: Move a task to Done
+      description: Used only by the engineer page. Moves a task to Done.
+      tags:
+        - Engineer
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task moved to Done
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+
+  # ---------- Manager API ----------
+
+  /api/task:
+    post:
+      operationId: createTask
+      summary: Create a task
+      description: Used only by the manager page. Creates a new, unassigned task.
+      tags:
+        - Manager
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTask'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid request body
+
+  /api/task/{taskId}/assign:
+    post:
+      operationId: assignTask
+      summary: Assign a task to an engineer
+      description: Used only by the manager page.
+      tags:
+        - Manager
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                personId:
+                  type: string
+                  example: jamell
+              required:
+                - personId
+      responses:
+        '200':
+          description: Task assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task or person not found
+
+  /api/people:
+    get:
+      operationId: getPeople
+      summary: List engineers
+      description: Used only by the manager page, to populate the roster and the assign-to dropdown.
+      tags:
+        - Manager
+      responses:
+        '200':
+          description: List of people
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+
+  /api/people/{peopleId}:
+    post:
+      operationId: createPerson
+      summary: Add an engineer
+      description: Used only by the manager page. peopleId is chosen by the manager, not auto-generated.
+      tags:
+        - Manager
+      parameters:
+        - name: peopleId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: jamell
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Jamell
+              required:
+                - name
+      responses:
+        '201':
+          description: Person created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          description: Invalid request body, or peopleId already exists
