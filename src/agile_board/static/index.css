@@ -48,7 +48,6 @@ header p {
     gap: 24px;
 }
 
-.manager-info,
 .engineer-select {
     display: flex;
     flex-direction: column;
@@ -62,9 +61,22 @@ header p {
     color: var(--blue-mid);
 }
 
-.manager-name {
-    font-weight: 600;
-    font-size: 0.95rem;
+/* Manager page link: solid amber button, distinct from the engineer pills */
+.manager-btn {
+    background: var(--amber);
+    color: var(--blue);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.manager-btn:hover,
+.manager-btn:focus-visible {
+    background: var(--white);
+    outline: none;
 }
 
 .engineer-select select {
@@ -164,6 +176,23 @@ main {
     font-weight: 600;
     padding: 2px 8px;
     border-radius: 999px;
+    border: 1px solid var(--amber);
+    text-decoration: none;
+}
+
+/* Engineer pill links to /engineer/<name> */
+a.card-engineer:hover,
+a.card-engineer:focus-visible {
+    background: var(--blue);
+    color: var(--white);
+    border-color: var(--blue);
+    outline: none;
+}
+
+.card-unassigned {
+    background: var(--white);
+    border-color: var(--blue-mid);
+    color: var(--blue-mid);
 }
 
 .empty {

@@ -191,3 +191,73 @@ def get_tasks_by_person(conn: Connection, person_id: int):
         print(f"Unable to retrieve tasks for person {person_id}: {err}")
         conn.rollback()
         raise
+
+
+def get_all_people(conn: Connection):
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT person_id, name FROM person ORDER BY name;")
+            return cur.fetchall()
+    except Error as err:
+        print(f"Unable to retrieve people: {err}")
+        conn.rollback()
+        raise
+
+
+def get_all_tasks(conn: Connection):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT task_id, task_info, created_at, updated_at, status, person_id
+                FROM task
+                ORDER BY task_id;
+                """
+            )
+            return cur.fetchall()
+    except Error as err:
+        print(f"Unable to retrieve tasks: {err}")
+        conn.rollback()
+        raise
+
+
+def assign_task(conn: Connection, task_id: int, person_id: int) -> bool:
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE task
+                SET person_id = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE task_id = %s
+                RETURNING task_id;
+                """,
+                (person_id, task_id),
+            )
+            updated = cur.fetchone()
+            conn.commit()
+            return updated is not None
+    except Error as err:
+        print(f"Unable to assign task {task_id} to person {person_id}: {err}")
+        conn.rollback()
+        raise
+
+
+def update_task_status(conn: Connection, task_id: int, status: str) -> bool:
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE task
+                SET status = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE task_id = %s
+                RETURNING task_id;
+                """,
+                (status, task_id),
+            )
+            updated = cur.fetchone()
+            conn.commit()
+            return updated is not None
+    except Error as err:
+        print(f"Unable to update task {task_id} to {status}: {err}")
+        conn.rollback()
+        raise
