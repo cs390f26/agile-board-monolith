@@ -1,3 +1,6 @@
 flask
 psycopg[binary,pool]
 dotenv
+pytest
+gunicorn
+ruff

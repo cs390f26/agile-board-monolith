@@ -1,0 +1,1 @@
+PYTHONPATH=src gunicorn 'agile_board.app:create_app()' --bind 127.0.0.1:8000

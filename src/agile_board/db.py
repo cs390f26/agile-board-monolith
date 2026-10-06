@@ -3,6 +3,7 @@ from psycopg.errors import Error
 
 # DATABASE INITIALIZATION
 
+
 def init_db(conn: Connection) -> bool:
     try:
         with conn.cursor() as cur:
@@ -29,33 +30,31 @@ def init_db(conn: Connection) -> bool:
         conn.rollback()
         raise
 
+
 # PERSON TABLE MANIPULATION
+
 
 def get_person(conn: Connection, name: str):
     try:
         with conn.cursor() as cur:
-            cur.execute(
-                "SELECT person_id, name FROM person WHERE name = %s;",
-                (name,)
-            )
+            cur.execute("SELECT person_id, name FROM person WHERE name = %s;", (name,))
             return cur.fetchone()
     except Error as err:
         print(f"Unable to get person by name '{name}': {err}")
         conn.rollback()
         raise
 
+
 def get_person_by_id(conn: Connection, person_id: int):
     try:
         with conn.cursor() as cur:
-            cur.execute(
-                "SELECT person_id, name FROM person WHERE person_id = %s;",
-                (person_id,)
-            )
+            cur.execute("SELECT person_id, name FROM person WHERE person_id = %s;", (person_id,))
             return cur.fetchone()
     except Error as err:
         print(f"Unable to get person {person_id}: {err}")
         conn.rollback()
         raise
+
 
 def create_person(conn: Connection, name: str) -> int:
     try:
@@ -66,7 +65,7 @@ def create_person(conn: Connection, name: str) -> int:
                 VALUES (%s)
                 RETURNING person_id;
                 """,
-                (name,)
+                (name,),
             )
             person_id = cur.fetchone()[0]
             conn.commit()
@@ -75,6 +74,7 @@ def create_person(conn: Connection, name: str) -> int:
         print(f"Unable to create person: {err}")
         conn.rollback()
         raise
+
 
 def delete_person_by_id(conn: Connection, person_id: int) -> bool:
     try:
@@ -85,7 +85,7 @@ def delete_person_by_id(conn: Connection, person_id: int) -> bool:
                 WHERE person_id = %s 
                 RETURNING person_id;
                 """,
-                (person_id,)
+                (person_id,),
             )
             deleted = cur.fetchone()
             conn.commit()
@@ -95,7 +95,9 @@ def delete_person_by_id(conn: Connection, person_id: int) -> bool:
         conn.rollback()
         raise
 
+
 # TASK TABLE MANIPULATION
+
 
 def get_task_by_id(conn: Connection, task_id: int):
     try:
@@ -106,13 +108,14 @@ def get_task_by_id(conn: Connection, task_id: int):
                 FROM task
                 WHERE task_id = %s;
                 """,
-                (task_id,)
+                (task_id,),
             )
             return cur.fetchone()
     except Error as err:
         print(f"Unable to get task {task_id}: {err}")
         conn.rollback()
         raise
+
 
 def create_task(conn: Connection, task_info: str) -> int:
     try:
@@ -123,7 +126,7 @@ def create_task(conn: Connection, task_info: str) -> int:
                 VALUES (%s)
                 RETURNING task_id;
                 """,
-                (task_info,)
+                (task_info,),
             )
             task_id = cur.fetchone()[0]
             conn.commit()
@@ -132,6 +135,7 @@ def create_task(conn: Connection, task_info: str) -> int:
         print(f"Unable to create task: {err}")
         conn.rollback()
         raise
+
 
 def delete_task(conn: Connection, task_id: int) -> bool:
     try:
@@ -142,7 +146,7 @@ def delete_task(conn: Connection, task_id: int) -> bool:
                 WHERE task_id = %s
                 RETURNING task_id;
                 """,
-                (task_id,)
+                (task_id,),
             )
             deleted = cur.fetchone()
             conn.commit()
@@ -151,6 +155,7 @@ def delete_task(conn: Connection, task_id: int) -> bool:
         print(f"Unable to delete task {task_id}: {err}")
         conn.rollback()
         raise
+
 
 def get_tasks_by_status(conn: Connection, status: str):
     try:
@@ -161,13 +166,14 @@ def get_tasks_by_status(conn: Connection, status: str):
                 FROM task
                 WHERE status = %s;
                 """,
-                (status,)
+                (status,),
             )
             return cur.fetchall()
     except Error as err:
         print(f"Unable to retrieve tasks of {status} status: {err}")
         conn.rollback()
         raise
+
 
 def get_tasks_by_person(conn: Connection, person_id: int):
     try:
@@ -178,7 +184,7 @@ def get_tasks_by_person(conn: Connection, person_id: int):
                 FROM task
                 WHERE person_id = %s;
                 """,
-                (person_id,)
+                (person_id,),
             )
             return cur.fetchall()
     except Error as err:
