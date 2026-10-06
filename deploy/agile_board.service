@@ -8,7 +8,9 @@ Group=ec2-user
 WorkingDirectory=/agile-board-monolith
 Environment="PYTHONPATH=src"
 EnvironmentFile=-/agile-board-monolith/.env
-ExecStart=/agile-board-monolith/.venv/bin/gunicorn 'agile_board.app:create_app()' --bind 127.0.0.1:8000
+# Grants just the one specific Linux capability needed to bind low ports, without making the whole Gunicorn process run as root.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+ExecStart=/agile-board-monolith/.venv/bin/gunicorn 'agile_board.app:create_app()' --bind 0.0.0.0:80
 Restart=always
 RestartSec=3
 
