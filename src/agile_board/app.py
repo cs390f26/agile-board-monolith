@@ -5,6 +5,7 @@ from flask import Flask, current_app, g, render_template
 from psycopg_pool import ConnectionPool
 
 from agile_board import db
+from agile_board.agile_board import AgileBoard
 
 
 # function to get a connection from the connection pool. (our app object has a pool variable that is a ConnectionPool object)
@@ -54,7 +55,7 @@ def create_app():
 
     @app.route("/api/summary_json", methods=(["GET"]))
     def whole_summary():
-        return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
+        return AgileBoard(get_db()).get_summary()
 
     @app.route("/api/task/", methods=(["POST"]))
     def create_task():

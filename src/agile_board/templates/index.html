@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Manager Dashboard</title>
+    <title>Project Dashboard</title>
     <link rel="stylesheet" href="../static/index.css">
 </head>
 <body>
@@ -13,16 +13,13 @@
         <p>Overview of every engineer's tickets</p>
     </div>
     <div class="header-controls">
-        <div class="manager-info">
-            <span class="label">Manager</span>
-            <span class="manager-name" id="manager-name">Jordan Ellis</span>
-        </div>
         <div class="engineer-select">
             <span class="label" for="engineer-filter">Engineer</span>
             <select id="engineer-filter">
                 <option value="all">All engineers</option>
             </select>
         </div>
+        <a class="manager-btn" href="/manager">Manager</a>
     </div>
 </header>
 
@@ -55,46 +52,54 @@
 </main>
 
 <script>
-    // Dummy data. Swap this for a fetch() to your backend later.
-    const tasks = [
-        { id: 1, title: "Design database schema", status: "backlog", engineer: "Liam" },
-        { id: 2, title: "Set up CI pipeline", status: "backlog", engineer: "Liam" },
-        { id: 3, title: "Write API documentation", status: "backlog", engineer: "Priya" },
-        { id: 4, title: "Add rate limiting to login", status: "backlog", engineer: "Priya" },
-        { id: 5, title: "Implement auth endpoints", status: "inprogress", engineer: "Liam" },
-        { id: 6, title: "Build ticket list component", status: "inprogress", engineer: "Noah" },
-        { id: 7, title: "Configure Terraform state bucket", status: "done", engineer: "Noah" },
-        { id: 8, title: "Create project repo", status: "done", engineer: "Priya" },
-        { id: 9, title: "Design onboarding flow", status: "backlog", engineer: "Noah" },
-        { id: 10, title: "Fix flaky checkout test", status: "inprogress", engineer: "Priya" }
-    ];
-
-    const engineers = [...new Set(tasks.map(t => t.engineer))].sort();
+    let tasks = [];
     const select = document.getElementById("engineer-filter");
-    engineers.forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-    });
-
     const zones = document.querySelectorAll(".dropzone");
+
+    // GET /api/summary_json -> [{ personId, name, tasks: [{ taskId, title, status, personId }] }]
+    // Flatten into one task list tagged with the engineer's name (null = unassigned).
+    async function loadSummary() {
+        const res = await fetch("/api/summary_json");
+        if (!res.ok) throw new Error("Failed to load summary: " + res.status);
+        const summary = await res.json();
+
+        tasks = summary.flatMap(person =>
+            person.tasks.map(task => ({ ...task, engineer: person.name }))
+        );
+
+        summary
+            .filter(person => person.name !== null)
+            .forEach(person => {
+                const opt = document.createElement("option");
+                opt.value = person.name;
+                opt.textContent = person.name;
+                select.appendChild(opt);
+            });
+    }
 
     function buildCard(task) {
         const card = document.createElement("div");
         card.className = "card";
-        card.dataset.id = task.id;
+        card.dataset.id = task.taskId;
 
         const label = document.createElement("span");
         label.className = "card-title";
         label.textContent = task.title;
-
-        const engineer = document.createElement("span");
-        engineer.className = "card-engineer";
-        engineer.textContent = task.engineer;
-
         card.appendChild(label);
-        card.appendChild(engineer);
+
+        // Clicking an engineer opens their board at /engineer/<name>
+        if (task.engineer) {
+            const engineer = document.createElement("a");
+            engineer.className = "card-engineer";
+            engineer.href = "/engineer/" + encodeURIComponent(task.engineer);
+            engineer.textContent = task.engineer;
+            card.appendChild(engineer);
+        } else {
+            const unassigned = document.createElement("span");
+            unassigned.className = "card-engineer card-unassigned";
+            unassigned.textContent = "Unassigned";
+            card.appendChild(unassigned);
+        }
         return card;
     }
 
@@ -121,7 +126,9 @@
     }
 
     select.addEventListener("change", renderBoard);
-    renderBoard();
+    loadSummary()
+        .catch(err => console.error(err))
+        .finally(renderBoard);
 </script>
 </body>
 </html>
