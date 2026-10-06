@@ -19,7 +19,7 @@ def test_engineer_page_shows_name(client):
 
 def test_index_page_has_manager_button(client):
     response = client.get("/")
-    assert b'href="/manager"' in response.data
+    assert b'href="manager.html"' in response.data
 
 
 def test_summary_json_uses_agile_board(client):
