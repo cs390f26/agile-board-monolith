@@ -14,9 +14,8 @@
     </div>
     <div class="header-controls">
         <div class="engineer-select">
-            <span class="label" for="engineer-filter">Engineer</span>
-            <select id="engineer-filter">
-                <option value="all">All engineers</option>
+            <select id="engineer-select" aria-label="Engineer">
+                <option value="" selected disabled>Engineer</option>
             </select>
         </div>
         <a class="manager-btn" href="manager.html">Manager</a>
@@ -53,7 +52,7 @@
 
 <script>
     let tasks = [];
-    const select = document.getElementById("engineer-filter");
+    const select = document.getElementById("engineer-select");
     const zones = document.querySelectorAll(".dropzone");
 
     // GET /api/summary_json -> [{ personId, name, tasks: [{ taskId, title, status, personId }] }]
@@ -104,14 +103,11 @@
     }
 
     function renderBoard() {
-        const filter = select.value;
         zones.forEach(zone => zone.innerHTML = "");
-
-        const visible = tasks.filter(t => filter === "all" || t.engineer === filter);
 
         zones.forEach(zone => {
             const status = zone.dataset.status;
-            const cards = visible.filter(t => t.status === status);
+            const cards = tasks.filter(t => t.status === status);
             cards.forEach(task => zone.appendChild(buildCard(task)));
 
             document.getElementById("count-" + zone.id).textContent = cards.length;
@@ -125,7 +121,13 @@
         });
     }
 
-    select.addEventListener("change", renderBoard);
+    // Picking an engineer opens their board at /engineer/<name>
+    select.addEventListener("change", () => {
+        if (select.value) window.location.href = "/engineer/" + encodeURIComponent(select.value);
+    });
+
+    // Reset the dropdown when coming back via the browser's back button
+    window.addEventListener("pageshow", () => { select.selectedIndex = 0; });
     loadSummary()
         .catch(err => console.error(err))
         .finally(renderBoard);
