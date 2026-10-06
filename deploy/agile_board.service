@@ -8,9 +8,7 @@ Group=ec2-user
 WorkingDirectory=/agile-board-monolith
 Environment="PYTHONPATH=src"
 EnvironmentFile=-/agile-board-monolith/.env
-
-ExecStart=/usr/local/bin/gunicorn 'agile_board.app:create_app()' --bind 127.0.0.1:8000
-
+ExecStart=/agile-board-monolith/.venv/bin/gunicorn 'agile_board.app:create_app()' --bind 127.0.0.1:8000
 Restart=always
 RestartSec=3
 
