@@ -65,8 +65,8 @@ def get_all_people(conn: Connection):
         print(f"Unable to fetch people: {err}")
         conn.rollback()
         raise
-    
-    
+
+
 def update_person_name(conn: Connection, person_id: int, new_name: str) -> bool:
     try:
         with conn.cursor() as cur:
@@ -77,7 +77,7 @@ def update_person_name(conn: Connection, person_id: int, new_name: str) -> bool:
                 WHERE person_id = %s
                 RETURNING person_id;
                 """,
-                (new_name, person_id)
+                (new_name, person_id),
             )
             updated = cur.fetchone()
             conn.commit()
@@ -147,8 +147,8 @@ def get_task_by_id(conn: Connection, task_id: int):
         print(f"Unable to get task {task_id}: {err}")
         conn.rollback()
         raise
-    
-    
+
+
 def get_tasks_by_status(conn: Connection, status: str):
     try:
         with conn.cursor() as cur:
@@ -183,8 +183,8 @@ def get_tasks_by_person(conn: Connection, person_id: int):
         print(f"Unable to retrieve tasks for person {person_id}: {err}")
         conn.rollback()
         raise
-    
-    
+
+
 def get_all_tasks(conn: Connection):
     try:
         with conn.cursor() as cur:
@@ -233,7 +233,7 @@ def assign_task(conn: Connection, task_id: int, person_id: int | None) -> bool:
                 WHERE task_id = %s
                 RETURNING task_id;
                 """,
-                (person_id, task_id)
+                (person_id, task_id),
             )
             updated = cur.fetchone()
             conn.commit()
