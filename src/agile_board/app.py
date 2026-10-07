@@ -1,7 +1,8 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, current_app, g as req_cache, render_template
+from flask import Flask, current_app, render_template
+from flask import g as req_cache
 from psycopg_pool import ConnectionPool
 
 from agile_board import db
