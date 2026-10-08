@@ -56,6 +56,38 @@ def get_person_by_id(conn: Connection, person_id: int):
         raise
 
 
+def get_all_people(conn: Connection):
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT person_id, name FROM person ORDER BY name ASC;")
+            return cur.fetchall()
+    except Error as err:
+        print(f"Unable to fetch people: {err}")
+        conn.rollback()
+        raise
+
+
+def update_person_name(conn: Connection, person_id: int, new_name: str) -> bool:
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE person
+                SET name = %s
+                WHERE person_id = %s
+                RETURNING person_id;
+                """,
+                (new_name, person_id),
+            )
+            updated = cur.fetchone()
+            conn.commit()
+            return updated is not None
+    except Error as err:
+        print(f"Unable to update person {person_id}: {err}")
+        conn.rollback()
+        raise
+
+
 def create_person(conn: Connection, name: str) -> int:
     try:
         with conn.cursor() as cur:
@@ -117,46 +149,6 @@ def get_task_by_id(conn: Connection, task_id: int):
         raise
 
 
-def create_task(conn: Connection, task_info: str) -> int:
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                INSERT INTO task (task_info)
-                VALUES (%s)
-                RETURNING task_id;
-                """,
-                (task_info,),
-            )
-            task_id = cur.fetchone()[0]
-            conn.commit()
-            return task_id
-    except Error as err:
-        print(f"Unable to create task: {err}")
-        conn.rollback()
-        raise
-
-
-def delete_task(conn: Connection, task_id: int) -> bool:
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                DELETE FROM task
-                WHERE task_id = %s
-                RETURNING task_id;
-                """,
-                (task_id,),
-            )
-            deleted = cur.fetchone()
-            conn.commit()
-            return deleted is not None
-    except Error as err:
-        print(f"Unable to delete task {task_id}: {err}")
-        conn.rollback()
-        raise
-
-
 def get_tasks_by_status(conn: Connection, status: str):
     try:
         with conn.cursor() as cur:
@@ -193,17 +185,6 @@ def get_tasks_by_person(conn: Connection, person_id: int):
         raise
 
 
-def get_all_people(conn: Connection):
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SELECT person_id, name FROM person ORDER BY name;")
-            return cur.fetchall()
-    except Error as err:
-        print(f"Unable to retrieve people: {err}")
-        conn.rollback()
-        raise
-
-
 def get_all_tasks(conn: Connection):
     try:
         with conn.cursor() as cur:
@@ -211,17 +192,38 @@ def get_all_tasks(conn: Connection):
                 """
                 SELECT task_id, task_info, created_at, updated_at, status, person_id
                 FROM task
-                ORDER BY task_id;
+                ORDER BY created_at DESC;
                 """
             )
             return cur.fetchall()
     except Error as err:
-        print(f"Unable to retrieve tasks: {err}")
+        print(f"Unable to fetch all tasks: {err}")
         conn.rollback()
         raise
 
 
-def assign_task(conn: Connection, task_id: int, person_id: int) -> bool:
+def create_task(conn: Connection, task_info: str) -> int:
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO task (task_info)
+                VALUES (%s)
+                RETURNING task_id;
+                """,
+                (task_info,),
+            )
+            task_id = cur.fetchone()[0]
+            conn.commit()
+            return task_id
+    except Error as err:
+        print(f"Unable to create task: {err}")
+        conn.rollback()
+        raise
+
+
+# doubles as unassigning a task by setting person_id to none
+def assign_task(conn: Connection, task_id: int, person_id: int | None) -> bool:
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -237,7 +239,7 @@ def assign_task(conn: Connection, task_id: int, person_id: int) -> bool:
             conn.commit()
             return updated is not None
     except Error as err:
-        print(f"Unable to assign task {task_id} to person {person_id}: {err}")
+        print(f"Unable to assign task {task_id}: {err}")
         conn.rollback()
         raise
 
@@ -259,5 +261,25 @@ def update_task_status(conn: Connection, task_id: int, status: str) -> bool:
             return updated is not None
     except Error as err:
         print(f"Unable to update task {task_id} to {status}: {err}")
+        conn.rollback()
+        raise
+
+
+def delete_task(conn: Connection, task_id: int) -> bool:
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM task
+                WHERE task_id = %s
+                RETURNING task_id;
+                """,
+                (task_id,),
+            )
+            deleted = cur.fetchone()
+            conn.commit()
+            return deleted is not None
+    except Error as err:
+        print(f"Unable to delete task {task_id}: {err}")
         conn.rollback()
         raise
