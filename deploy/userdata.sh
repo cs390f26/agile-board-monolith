@@ -4,7 +4,6 @@ yum install -y git
 dnf install -y git postgresql15-server postgresql15
 /usr/bin/postgresql-setup --initdb
 
-# Allow unauthenticated local connections (trust mode)
 PG_HBA="/var/lib/pgsql/data/pg_hba.conf"
 sed -i 's/127.0.0.1\/32            ident/127.0.0.1\/32            trust/' "$PG_HBA"
 

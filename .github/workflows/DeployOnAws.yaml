@@ -1,7 +1,7 @@
 name: Deploy on AWS
 
 on:
-  workflow_dispatch:  # this has to be triggered manually
+  workflow_dispatch:
 
 jobs:
   deploy:

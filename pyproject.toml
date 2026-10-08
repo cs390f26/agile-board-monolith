@@ -4,7 +4,6 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
-# E = pycodestyle errors, F = pyflakes (unused imports/vars, etc.), I = import sorting
 
 [tool.ruff.format]
 quote-style = "double"
