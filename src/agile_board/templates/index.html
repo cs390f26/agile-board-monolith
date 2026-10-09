@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Project Dashboard</title>
+    <link rel="stylesheet" href="../static/common.css">
     <link rel="stylesheet" href="../static/index.css">
 </head>
 <body>
 <header>
     <div>
         <h1>Project Dashboard</h1>
-        <p>Overview of every engineer's tickets</p>
+        <p>What's moving and what still needs an owner</p>
     </div>
     <div class="header-controls">
         <div class="engineer-select">
@@ -23,40 +24,65 @@
 </header>
 
 <main>
-    <div class="notebook">
-        <section class="lane">
-            <div class="lane-head">
-                <h2>Backlog</h2>
-                <span class="count" id="count-backlog">0</span>
+    <section class="overview">
+        <div class="overview-progress">
+            <div class="overview-head">
+                <h2>Project progress</h2>
+                <span class="percent" id="overall-percent">0%</span>
             </div>
-            <div class="dropzone" id="backlog" data-status="backlog"></div>
-        </section>
+            <div class="bar bar-lg" role="progressbar" aria-label="Project progress" aria-valuemin="0" aria-valuemax="100" id="overall-bar">
+                <div class="bar-fill" id="overall-fill"></div>
+            </div>
+            <p class="overview-caption" id="overall-caption">Loading tasks…</p>
+        </div>
+        <div class="stats">
+            <div class="stat stat-inprogress">
+                <span class="stat-value" id="stat-inprogress">0</span>
+                <span class="stat-label">In progress</span>
+            </div>
+            <div class="stat stat-backlog">
+                <span class="stat-value" id="stat-backlog">0</span>
+                <span class="stat-label">Unassigned</span>
+            </div>
+            <div class="stat stat-done">
+                <span class="stat-value" id="stat-done">0</span>
+                <span class="stat-label">Done</span>
+            </div>
+        </div>
+    </section>
 
-        <section class="lane">
-            <div class="lane-head">
-                <h2>In progress</h2>
-                <span class="count" id="count-inprogress">0</span>
-            </div>
-            <div class="dropzone" id="inprogress" data-status="inprogress"></div>
-        </section>
+    <section class="team">
+        <h2>Team progress</h2>
+        <div class="team-track" id="team-track"></div>
+    </section>
 
-        <section class="lane">
-            <div class="lane-head">
-                <h2>Done</h2>
-                <span class="count" id="count-done">0</span>
-            </div>
-            <div class="dropzone" id="done" data-status="done"></div>
-        </section>
-    </div>
+    <section class="swimlane swimlane-inprogress">
+        <div class="swimlane-head">
+            <h2>In progress</h2>
+            <span class="count" id="count-inprogress">0</span>
+        </div>
+        <div class="track" id="inprogress" data-status="inprogress"></div>
+    </section>
+
+    <section class="swimlane swimlane-backlog">
+        <div class="swimlane-head">
+            <h2>Unassigned</h2>
+            <span class="count" id="count-backlog">0</span>
+        </div>
+        <div class="track" id="backlog" data-status="backlog"></div>
+    </section>
 </main>
 
 <script>
     let tasks = [];
+    let people = [];
     const select = document.getElementById("engineer-select");
-    const zones = document.querySelectorAll(".dropzone");
+    const tracks = document.querySelectorAll(".track");
+    const laneFilters = {
+        inprogress: t => t.status === "inprogress",
+        backlog: t => t.status === "backlog" && !t.engineer
+    };
 
-    // GET /api/summary_json -> [{ personId, name, tasks: [{ taskId, title, status, personId }] }]
-    // Flatten into one task list tagged with the engineer's name (null = unassigned).
     async function loadSummary() {
         const res = await fetch("/api/summary_json");
         if (!res.ok) throw new Error("Failed to load summary: " + res.status);
@@ -65,20 +91,28 @@
         tasks = summary.flatMap(person =>
             person.tasks.map(task => ({ ...task, engineer: person.name }))
         );
+        people = summary.filter(person => person.name !== null);
 
-        summary
-            .filter(person => person.name !== null)
-            .forEach(person => {
-                const opt = document.createElement("option");
-                opt.value = person.name;
-                opt.textContent = person.name;
-                select.appendChild(opt);
-            });
+        people.forEach(person => {
+            const opt = document.createElement("option");
+            opt.value = person.name;
+            opt.textContent = person.name;
+            select.appendChild(opt);
+        });
+    }
+
+    function engineerUrl(name) {
+        return "/engineer/" + encodeURIComponent(name);
+    }
+
+    function percentDone(list) {
+        if (list.length === 0) return 0;
+        return Math.round(list.filter(t => t.status === "done").length / list.length * 100);
     }
 
     function buildCard(task) {
         const card = document.createElement("div");
-        card.className = "card";
+        card.className = "card card-" + task.status;
         card.dataset.id = task.taskId;
 
         const label = document.createElement("span");
@@ -86,51 +120,117 @@
         label.textContent = task.title;
         card.appendChild(label);
 
-        // Clicking an engineer opens their board at /engineer/<name>
         if (task.engineer) {
             const engineer = document.createElement("a");
             engineer.className = "card-engineer";
-            engineer.href = "/engineer/" + encodeURIComponent(task.engineer);
+            engineer.href = engineerUrl(task.engineer);
             engineer.textContent = task.engineer;
             card.appendChild(engineer);
         } else {
             const unassigned = document.createElement("span");
             unassigned.className = "card-engineer card-unassigned";
-            unassigned.textContent = "Unassigned";
+            unassigned.textContent = "No owner";
             card.appendChild(unassigned);
         }
         return card;
     }
 
-    function renderBoard() {
-        zones.forEach(zone => zone.innerHTML = "");
+    function renderOverview() {
+        const count = status => tasks.filter(t => t.status === status).length;
+        const done = count("done");
+        const percent = percentDone(tasks);
 
-        zones.forEach(zone => {
-            const status = zone.dataset.status;
-            const cards = tasks.filter(t => t.status === status);
-            cards.forEach(task => zone.appendChild(buildCard(task)));
+        document.getElementById("overall-percent").textContent = percent + "%";
+        document.getElementById("overall-fill").style.width = percent + "%";
+        document.getElementById("overall-bar").setAttribute("aria-valuenow", percent);
+        document.getElementById("overall-caption").textContent = tasks.length === 0
+            ? "No tasks yet"
+            : done + " of " + tasks.length + " tasks done";
 
-            document.getElementById("count-" + zone.id).textContent = cards.length;
+        document.getElementById("stat-inprogress").textContent = count("inprogress");
+        document.getElementById("stat-backlog").textContent = tasks.filter(laneFilters.backlog).length;
+        document.getElementById("stat-done").textContent = done;
+    }
+
+    function renderTeam() {
+        const track = document.getElementById("team-track");
+        track.innerHTML = "";
+
+        if (people.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "empty";
+            empty.textContent = "No engineers yet";
+            track.appendChild(empty);
+            return;
+        }
+
+        people.forEach(person => {
+            const percent = percentDone(person.tasks);
+            const active = person.tasks.filter(t => t.status === "inprogress").length;
+
+            const tile = document.createElement("a");
+            tile.className = "member";
+            tile.href = engineerUrl(person.name);
+
+            const head = document.createElement("div");
+            head.className = "member-head";
+            const name = document.createElement("span");
+            name.className = "member-name";
+            name.textContent = person.name;
+            const pct = document.createElement("span");
+            pct.className = "member-percent";
+            pct.textContent = percent + "%";
+            head.append(name, pct);
+
+            const bar = document.createElement("div");
+            bar.className = "bar";
+            const fill = document.createElement("div");
+            fill.className = "bar-fill";
+            fill.style.width = percent + "%";
+            bar.appendChild(fill);
+
+            const meta = document.createElement("span");
+            meta.className = "member-meta";
+            meta.textContent = person.tasks.length === 0
+                ? "No tasks"
+                : active + " in progress · " + person.tasks.length + " total";
+
+            tile.append(head, bar, meta);
+            track.appendChild(tile);
+        });
+    }
+
+    function renderLanes() {
+        tracks.forEach(track => {
+            track.innerHTML = "";
+            const cards = tasks.filter(laneFilters[track.dataset.status]);
+            cards.forEach(task => track.appendChild(buildCard(task)));
+
+            document.getElementById("count-" + track.id).textContent = cards.length;
 
             if (cards.length === 0) {
                 const empty = document.createElement("div");
                 empty.className = "empty";
-                empty.textContent = "No tickets here";
-                zone.appendChild(empty);
+                empty.textContent = "Nothing here right now";
+                track.appendChild(empty);
             }
         });
     }
 
-    // Picking an engineer opens their board at /engineer/<name>
+    function renderAll() {
+        renderOverview();
+        renderTeam();
+        renderLanes();
+    }
+
     select.addEventListener("change", () => {
-        if (select.value) window.location.href = "/engineer/" + encodeURIComponent(select.value);
+        if (select.value) window.location.href = engineerUrl(select.value);
     });
 
-    // Reset the dropdown when coming back via the browser's back button
     window.addEventListener("pageshow", () => { select.selectedIndex = 0; });
     loadSummary()
         .catch(err => console.error(err))
-        .finally(renderBoard);
+        .finally(renderAll);
 </script>
 </body>
 </html>

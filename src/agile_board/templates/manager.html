@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Manager</title>
+    <link rel="stylesheet" href="../static/common.css">
     <link rel="stylesheet" href="../static/manager.css">
 </head>
 <body>
@@ -182,10 +183,8 @@
 
         titleInput.value = "";
         renderAll();
-        // TODO: POST /api/task { title }
     });
 
-    // Assign task -- stands in for POST /api/task/{taskId}/assign
     document.getElementById("assign-task-form").addEventListener("submit", e => {
         e.preventDefault();
         const taskId = document.getElementById("assign-task-select").value;
@@ -195,23 +194,19 @@
         if (task) task.peopleId = personId;
 
         renderAll();
-        // TODO: POST /api/task/{taskId}/assign { personId }
     });
 
-    // Add engineer -- stands in for POST /api/people
     document.getElementById("add-engineer-form").addEventListener("submit", e => {
         e.preventDefault();
         const nameInput = document.getElementById("engineer-name");
         const name = nameInput.value.trim();
         if (!name) return;
 
-        // Real backend generates peopleId; this is just a stand-in for the mockup.
         const peopleId = "p" + (people.length + 1);
         people.push({ peopleId, name, role: "engineer" });
 
         nameInput.value = "";
         renderAll();
-        // TODO: POST /api/people { name } -- server returns the generated peopleId
     });
 
     renderAll();

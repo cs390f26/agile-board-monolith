@@ -41,35 +41,6 @@ header p {
     margin-top: 2px;
 }
 
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.engineer-nav {
-    font: inherit;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--white);
-    background: transparent;
-    border: 1px solid var(--blue-mid);
-    border-radius: 6px;
-    padding: 10px 14px;
-    cursor: pointer;
-}
-
-.engineer-nav:hover,
-.engineer-nav:focus-visible {
-    border-color: var(--amber);
-    outline: none;
-}
-
-.engineer-nav option {
-    color: var(--blue);
-    background: var(--white);
-}
-
 .dashboard-btn {
     background: var(--amber);
     color: var(--blue);
@@ -103,7 +74,6 @@ main {
     margin-bottom: 14px;
 }
 
-/* ---------- Roster: notebook-style horizontal ruled rows ---------- */
 .roster-panel {
     background: var(--white);
     border: 1px solid var(--blue-mid);
@@ -155,12 +125,6 @@ main {
     opacity: 0.6;
 }
 
-.empty {
-    color: var(--blue-mid);
-    font-size: 0.85rem;
-}
-
-/* ---------- Forms ---------- */
 .forms-panel {
     display: flex;
     flex-direction: column;

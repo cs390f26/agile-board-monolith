@@ -4,9 +4,6 @@ import pytest
 
 from agile_board.agile_board import AgileBoard, InvalidInputError, NotFoundError
 
-# Every db function is patched, so these tests never touch postgres.
-# Task rows follow db.py: (task_id, task_info, created_at, updated_at, status, person_id)
-
 
 @pytest.fixture
 def mock_db():
@@ -17,9 +14,6 @@ def mock_db():
 @pytest.fixture
 def board():
     return AgileBoard(MagicMock())
-
-
-# ---------- get_summary ----------
 
 
 def test_summary_groups_tasks_by_person(mock_db, board):
@@ -76,9 +70,6 @@ def test_summary_empty(mock_db, board):
     assert board.get_summary() == []
 
 
-# ---------- people ----------
-
-
 def test_get_people(mock_db, board):
     mock_db.get_all_people.return_value = [(1, "Liam"), (2, "Priya")]
 
@@ -106,9 +97,6 @@ def test_create_person_duplicate(mock_db, board):
     with pytest.raises(InvalidInputError):
         board.create_person("Liam")
     mock_db.create_person.assert_not_called()
-
-
-# ---------- tasks ----------
 
 
 def test_create_task(mock_db, board):
@@ -147,9 +135,6 @@ def test_assign_task_unknown_task(mock_db, board):
 
     with pytest.raises(NotFoundError):
         board.assign_task(99, 1)
-
-
-# ---------- engineer ----------
 
 
 def test_get_engineer_tasks(mock_db, board):

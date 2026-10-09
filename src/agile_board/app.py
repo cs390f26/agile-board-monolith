@@ -9,17 +9,12 @@ from agile_board import db
 from agile_board.agile_board import AgileBoard
 
 
-# function to get a connection from the connection pool. (our app object has a pool variable that is a ConnectionPool object)
-# we use current_app to get the context of the current flask app that is running.
-# g is essentially a hashmap made to cache variables for each http request, so each req needs to get a connection and return it.
-# g's context/scope is exclusive to each http request.
 def get_db():
     if "db_conn" not in req_cache:
         req_cache.db_conn = current_app.pool.getconn()
     return req_cache.db_conn
 
 
-# function to return the db connection to the pool of connections
 def close_db(exc=None):
     conn = req_cache.pop("db_conn", None)
     if conn is not None:
@@ -39,7 +34,6 @@ def create_app():
     with app.pool.connection() as conn:
         db.init_db(conn)
 
-    # anytime an http req is over, we tell app to run a function which returns the connection to the pool.
     app.teardown_appcontext(close_db)
 
     @app.route("/")

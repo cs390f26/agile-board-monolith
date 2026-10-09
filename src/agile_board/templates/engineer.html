@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Engineer Dashboard</title>
+    <link rel="stylesheet" href="../static/common.css">
     <link rel="stylesheet" href="../static/engineer.css">
 </head>
 <body>
@@ -44,7 +45,6 @@
 </main>
 
 <script>
-    // Dummy data. Swap this for a fetch() to your backend later.
     const tasks = [
         { id: 1, title: "Design database schema", status: "backlog" },
         { id: 2, title: "Set up CI pipeline", status: "backlog" },
@@ -77,7 +77,6 @@
         return card;
     }
 
-    // Find the card the dragged item should be inserted before (top to bottom)
     function cardAfterCursor(zone, y) {
         const others = [...zone.querySelectorAll(".card:not(.dragging)")];
         let closest = { offset: Number.NEGATIVE_INFINITY, el: null };
@@ -107,7 +106,6 @@
         zone.addEventListener("drop", e => e.preventDefault());
     });
 
-    // Update task statuses, refresh counts and empty states
     function syncBoard() {
         zones.forEach(zone => {
             const cards = zone.querySelectorAll(".card");

@@ -1,9 +1,9 @@
+from collections import defaultdict
+
 from psycopg import Connection
 
 from agile_board import db
 
-# The db stores statuses as 'Unassigned' / 'In Progress' / 'Done'.
-# The API and front end use the lane ids 'backlog' / 'inprogress' / 'done'.
 DB_TO_API_STATUS = {"Unassigned": "backlog", "In Progress": "inprogress", "Done": "done"}
 API_TO_DB_STATUS = {v: k for k, v in DB_TO_API_STATUS.items()}
 
@@ -16,10 +16,6 @@ class InvalidInputError(Exception):
     pass
 
 
-# Wraps the db functions so the flask routes only deal with plain dicts.
-# Row layouts come from db.py:
-#   person -> (person_id, name)
-#   task   -> (task_id, task_info, created_at, updated_at, status, person_id)
 class AgileBoard:
     def __init__(self, conn: Connection):
         self.conn = conn
@@ -37,24 +33,16 @@ class AgileBoard:
             "personId": row[5],
         }
 
-    # ---------- Dashboard ----------
-
     def get_summary(self) -> list[dict]:
-        """Every person with their tasks. Unassigned tasks go in a final entry with personId None."""
-        people = [self._person_to_dict(p) for p in db.get_all_people(self.conn)]
-        tasks = [self._task_to_dict(t) for t in db.get_all_tasks(self.conn)]
+        tasks_by_person = defaultdict(list)
+        for row in db.get_all_tasks(self.conn):
+            task = self._task_to_dict(row)
+            tasks_by_person[task["personId"]].append(task)
 
-        summary = []
-        for person in people:
-            person_tasks = [t for t in tasks if t["personId"] == person["personId"]]
-            summary.append({**person, "tasks": person_tasks})
-
-        unassigned = [t for t in tasks if t["personId"] is None]
-        if unassigned:
-            summary.append({"personId": None, "name": None, "tasks": unassigned})
+        summary = [{**person, "tasks": tasks_by_person[person["personId"]]} for person in self.get_people()]
+        if tasks_by_person[None]:
+            summary.append({"personId": None, "name": None, "tasks": tasks_by_person[None]})
         return summary
-
-    # ---------- Manager ----------
 
     def get_people(self) -> list[dict]:
         return [self._person_to_dict(p) for p in db.get_all_people(self.conn)]
@@ -81,8 +69,6 @@ class AgileBoard:
         if not db.assign_task(self.conn, task_id, person_id):
             raise NotFoundError(f"task {task_id} not found")
         return self._task_to_dict(db.get_task_by_id(self.conn, task_id))
-
-    # ---------- Engineer ----------
 
     def get_engineer_tasks(self, name: str) -> list[dict]:
         person = db.get_person(self.conn, name)
