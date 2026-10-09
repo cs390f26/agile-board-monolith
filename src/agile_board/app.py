@@ -1,7 +1,8 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, current_app, g, render_template
+from flask import Flask, current_app, render_template
+from flask import g as req_cache
 from psycopg_pool import ConnectionPool
 
 from agile_board import db
@@ -9,13 +10,13 @@ from agile_board.agile_board import AgileBoard
 
 
 def get_db():
-    if "db_conn" not in g:
-        g.db_conn = current_app.pool.getconn()
-    return g.db_conn
+    if "db_conn" not in req_cache:
+        req_cache.db_conn = current_app.pool.getconn()
+    return req_cache.db_conn
 
 
 def close_db(exc=None):
-    conn = g.pop("db_conn", None)
+    conn = req_cache.pop("db_conn", None)
     if conn is not None:
         current_app.pool.putconn(conn)
 

@@ -13,7 +13,12 @@
         <h1>Manager</h1>
         <p>Assign work and add engineers to the team</p>
     </div>
-    <a class="dashboard-btn" href="/">Dashboard</a>
+    <div class="header-actions">
+        <select id="engineer-nav" class="engineer-nav">
+            <option value="" disabled selected>Engineers</option>
+        </select>
+        <a class="dashboard-btn" href="index.html">Dashboard</a>
+    </div>
 </header>
 
 <main>
@@ -58,9 +63,11 @@
 </main>
 
 <script>
+    // Dummy data standing in for GET /api/summary_json and GET /api/people.
+    // Anyone with role "manager" is excluded from the engineer dropdown below.
     let people = [
-        { peopleId: "jamell", name: "Jamell" },
-        { peopleId: "alex", name: "Alex" }
+        { peopleId: "jamell", name: "Jamell", role: "engineer" },
+        { peopleId: "alex", name: "Alex", role: "engineer" }
     ];
 
     let tasks = [
@@ -130,11 +137,37 @@
         });
     }
 
+    // Populates the header dropdown with everyone except managers. Picking
+    // a name navigates to that engineer's board.
+    function renderEngineerNav() {
+        const nav = document.getElementById("engineer-nav");
+        nav.innerHTML = '<option value="" disabled selected>Engineers</option>';
+
+        people
+            .filter(person => person.role !== "manager")
+            .forEach(person => {
+                const opt = document.createElement("option");
+                opt.value = person.name;
+                opt.textContent = person.name;
+                nav.appendChild(opt);
+            });
+    }
+
     function renderAll() {
         renderRoster();
         renderFormOptions();
+        renderEngineerNav();
     }
 
+    document.getElementById("engineer-nav").addEventListener("change", e => {
+        const name = e.target.value;
+        if (!name) return;
+        // Static mockup: query string. In the Flask app this becomes
+        // url_for('engineer_view', name=name), i.e. /engineer/<name>.
+        window.location.href = "engineer.html?name=" + encodeURIComponent(name);
+    });
+
+    // Create task -- stands in for POST /api/task
     document.getElementById("create-task-form").addEventListener("submit", e => {
         e.preventDefault();
         const titleInput = document.getElementById("task-title");
@@ -170,7 +203,7 @@
         if (!name) return;
 
         const peopleId = "p" + (people.length + 1);
-        people.push({ peopleId, name });
+        people.push({ peopleId, name, role: "engineer" });
 
         nameInput.value = "";
         renderAll();

@@ -13,14 +13,16 @@ su - postgres -c "psql -c 'CREATE DATABASE agile_board OWNER app_user;'"
 
 git clone https://github.com/cs390f26/agile-board-monolith.git /agile-board-monolith
 cd /agile-board-monolith
-chmod +x scripts/redeploy.sh scripts/setup.sh
-./scripts/setup.sh
+chmod +x scripts/redeploy.sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r deploy/requirements.txt
 
 cat << 'ENVEOF' > .env
 DB_URL=postgresql://app_user@127.0.0.1:5432/agile_board
 ENVEOF
 
-cp agile_board.service /etc/systemd/system
+cp deploy/agile_board.service /etc/systemd/system
 systemctl daemon-reload
 systemctl enable agile_board.service
 systemctl start agile_board.service
