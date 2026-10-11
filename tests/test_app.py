@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 def test_index_page_returns_200(client):
@@ -12,9 +12,15 @@ def test_manager_page_returns_200(client):
 
 
 def test_engineer_page_shows_name(client):
-    response = client.get("/engineer/Liam")
+    mock_person = MagicMock()
+    mock_person.name = "Liam"
+
+    with patch("agile_board.app.AgileBoard") as mock_board_cls:
+        mock_board_cls.return_value.get_person.return_value = mock_person
+        response = client.get("/engineer/1")
+
     assert response.status_code == 200
-    assert b"Liam's tasks" in response.data
+    assert "Liam's tasks" in response.get_data(as_text=True)
 
 
 def test_index_page_has_manager_button(client):

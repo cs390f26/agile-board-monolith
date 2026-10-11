@@ -63,23 +63,64 @@
 </main>
 
 <script>
-    // Dummy data standing in for GET /api/summary_json and GET /api/people.
-    // Anyone with role "manager" is excluded from the engineer dropdown below.
-    let people = [
-        { peopleId: "jamell", name: "Jamell", role: "engineer" },
-        { peopleId: "alex", name: "Alex", role: "engineer" }
-    ];
-
-    let tasks = [
-        { taskId: "t1", title: "Design database schema", peopleId: "jamell", status: "backlog" },
-        { taskId: "t2", title: "Set up CI pipeline", peopleId: "jamell", status: "backlog" },
-        { taskId: "t3", title: "Implement auth endpoints", peopleId: "jamell", status: "inprogress" },
-        { taskId: "t4", title: "Create project repo", peopleId: "jamell", status: "done" },
-        { taskId: "t5", title: "Write API documentation", peopleId: "alex", status: "backlog" },
-        { taskId: "t6", title: "Build ticket list component", peopleId: "alex", status: "inprogress" }
-    ];
+    let people = [];
+    let tasks = [];
 
     const statusLabel = { backlog: "Backlog", inprogress: "In progress", done: "Done" };
+
+
+    async function fetchSummary() {
+        const res = await fetch("/api/summary_json");
+        if (!res.ok) throw new Error(`Failed to load summary: ${res.status}`);
+        const summary = await res.json();
+
+        people = summary.map(person => ({
+            personId: person.id || person.name,
+            name: person.name,
+            role: person.role || "engineer"
+        }));
+
+        tasks = summary.flatMap(person =>
+            (person.tasks || []).map(task => ({
+                taskId: task.taskId || task.id,
+                title: task.title,
+                personId: person.id || person.name,
+                status: task.status
+            }))
+        );
+
+        return summary;
+    }
+
+    async function postCreateTask(title) {
+        const res = await fetch("/api/task/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title })
+        });
+        if (!res.ok) throw new Error(`Failed to create task: ${res.status}`);
+        return await res.json();
+    }
+
+    async function postAssignTask(taskId, personId) {
+        const res = await fetch(`/api/task/${encodeURIComponent(taskId)}/assign`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ person_id: personId })
+        });
+        if (!res.ok) throw new Error(`Failed to assign task: ${res.status}`);
+        return await res.json();
+    }
+
+    async function postCreatePerson(name) {
+        const res = await fetch(`/api/people/${encodeURIComponent(name)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        });
+        if (!res.ok) throw new Error(`Failed to create engineer: ${res.status}`);
+        return await res.json();
+    }
 
     function renderRoster() {
         const roster = document.getElementById("roster");
@@ -97,7 +138,7 @@
             const taskList = document.createElement("div");
             taskList.className = "roster-tasks";
 
-            const personTasks = tasks.filter(t => t.peopleId === person.peopleId);
+            const personTasks = tasks.filter(t => t.personId === person.personId);
             if (personTasks.length === 0) {
                 const empty = document.createElement("span");
                 empty.className = "empty";
@@ -131,7 +172,7 @@
         personSelect.innerHTML = "";
         people.forEach(person => {
             const opt = document.createElement("option");
-            opt.value = person.peopleId;
+            opt.value = person.personId ;
             opt.textContent = person.name;
             personSelect.appendChild(opt);
         });
@@ -147,7 +188,7 @@
             .filter(person => person.role !== "manager")
             .forEach(person => {
                 const opt = document.createElement("option");
-                opt.value = person.name;
+                opt.value = person.personId;
                 opt.textContent = person.name;
                 nav.appendChild(opt);
             });
@@ -159,57 +200,67 @@
         renderEngineerNav();
     }
 
+    async function loadAndRenderAll() {
+        try {
+            await fetchSummary();
+            renderAll();
+        } catch (err) {
+            console.error("Error loading board data:", err)
+        }
+    }
+
     document.getElementById("engineer-nav").addEventListener("change", e => {
-        const name = e.target.value;
-        if (!name) return;
+        const personId = e.target.value;
         // Static mockup: query string. In the Flask app this becomes
         // url_for('engineer_view', name=name), i.e. /engineer/<name>.
-        window.location.href = "engineer.html?name=" + encodeURIComponent(name);
+        if (personId) window.location.href = "engineer.html?name=" + encodeURIComponent(personId);
     });
 
     // Create task -- stands in for POST /api/task
-    document.getElementById("create-task-form").addEventListener("submit", e => {
+    document.getElementById("create-task-form").addEventListener("submit", async e => {
         e.preventDefault();
         const titleInput = document.getElementById("task-title");
         const title = titleInput.value.trim();
         if (!title) return;
 
-        tasks.push({
-            taskId: "t" + (tasks.length + 1),
-            title,
-            peopleId: null,
-            status: "backlog"
-        });
-
-        titleInput.value = "";
-        renderAll();
+        try {
+            await postCreateTask(title);
+            titleInput.value = "";
+            await loadAndRenderAll();
+        } catch (err) {
+            console.error("Error creating task:", err)
+        }
     });
 
-    document.getElementById("assign-task-form").addEventListener("submit", e => {
+    document.getElementById("assign-task-form").addEventListener("submit", async e => {
         e.preventDefault();
         const taskId = document.getElementById("assign-task-select").value;
         const personId = document.getElementById("assign-person-select").value;
 
-        const task = tasks.find(t => t.taskId === taskId);
-        if (task) task.peopleId = personId;
-
-        renderAll();
+        try {
+            await postAssignTask(taskId, personId);
+            await loadAndRenderAll();
+        } catch (err) {
+            console.error("Error assigning task:", err)
+        }
     });
 
-    document.getElementById("add-engineer-form").addEventListener("submit", e => {
+    document.getElementById("add-engineer-form").addEventListener("submit", async e => {
         e.preventDefault();
         const nameInput = document.getElementById("engineer-name");
         const name = nameInput.value.trim();
         if (!name) return;
 
-        const peopleId = "p" + (people.length + 1);
-        people.push({ peopleId, name, role: "engineer" });
-
-        nameInput.value = "";
-        renderAll();
+        try {
+            await postCreatePerson(name);
+            nameInput.value = "";
+            await loadAndRenderAll()
+        } catch (err) {
+            console.error("Error adding engineer:", err);
+        }
     });
 
-    renderAll();
+    loadAndRenderAll();
 </script>
 </body>
 </html>
