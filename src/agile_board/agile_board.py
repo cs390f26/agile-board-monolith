@@ -70,10 +70,10 @@ class AgileBoard:
             raise NotFoundError(f"task {task_id} not found")
         return self._task_to_dict(db.get_task_by_id(self.conn, task_id))
 
-    def get_engineer_tasks(self, name: str) -> list[dict]:
-        person = db.get_person(self.conn, name)
+    def get_engineer_tasks(self, person_id: int) -> list[dict]:
+        person = db.get_person_by_id(self.conn, person_id)
         if person is None:
-            raise NotFoundError(f"engineer '{name}' not found")
+            raise NotFoundError(f"engineer '{person_id}' not found")
         return [self._task_to_dict(t) for t in db.get_tasks_by_person(self.conn, person[0])]
 
     def move_task(self, task_id: int, status: str) -> dict:

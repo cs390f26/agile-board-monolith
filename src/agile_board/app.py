@@ -51,7 +51,11 @@ def create_app():
     @app.route("/api/summary_json", methods=(["GET"]))
     def whole_summary():
         return AgileBoard(get_db()).get_summary()
-
+    
+    @app.route("/api/people/<person_Id>/tasks", methods=(["GET"]))
+    def engineer_summary(person_Id):
+        return AgileBoard(get_db()).get_engineer_tasks(person_Id)
+        
     @app.route("/api/task/", methods=(["POST"]))
     def create_task():
         return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
@@ -68,7 +72,7 @@ def create_app():
     def update_task_done():
         return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
 
-    @app.route("/api/people/<people_Id>", methods=(["POST"]))
+    @app.route("/api/people/<person_Id>", methods=(["POST"]))
     def create_person():
         return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
 

@@ -138,7 +138,7 @@ def test_assign_task_unknown_task(mock_db, board):
 
 
 def test_get_engineer_tasks(mock_db, board):
-    mock_db.get_person.return_value = (1, "Liam")
+    mock_db.get_person_by_id.return_value = (1, "Liam")
     mock_db.get_tasks_by_person.return_value = [(10, "Design schema", None, None, "In Progress", 1)]
 
     assert board.get_engineer_tasks("Liam") == [{"taskId": 10, "title": "Design schema", "status": "inprogress", "personId": 1}]
@@ -146,10 +146,10 @@ def test_get_engineer_tasks(mock_db, board):
 
 
 def test_get_engineer_tasks_unknown(mock_db, board):
-    mock_db.get_person.return_value = None
+    mock_db.get_person_by_id.return_value = None
 
     with pytest.raises(NotFoundError):
-        board.get_engineer_tasks("Nobody")
+        board.get_engineer_tasks(1)
 
 
 @pytest.mark.parametrize("status, db_status", [("backlog", "Unassigned"), ("inprogress", "In Progress"), ("done", "Done")])
