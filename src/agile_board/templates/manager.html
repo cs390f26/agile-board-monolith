@@ -63,23 +63,64 @@
 </main>
 
 <script>
-    // Dummy data standing in for GET /api/summary_json and GET /api/people.
-    // Anyone with role "manager" is excluded from the engineer dropdown below.
-    let people = [
-        { peopleId: "jamell", name: "Jamell", role: "engineer" },
-        { peopleId: "alex", name: "Alex", role: "engineer" }
-    ];
-
-    let tasks = [
-        { taskId: "t1", title: "Design database schema", peopleId: "jamell", status: "backlog" },
-        { taskId: "t2", title: "Set up CI pipeline", peopleId: "jamell", status: "backlog" },
-        { taskId: "t3", title: "Implement auth endpoints", peopleId: "jamell", status: "inprogress" },
-        { taskId: "t4", title: "Create project repo", peopleId: "jamell", status: "done" },
-        { taskId: "t5", title: "Write API documentation", peopleId: "alex", status: "backlog" },
-        { taskId: "t6", title: "Build ticket list component", peopleId: "alex", status: "inprogress" }
-    ];
+    let people = [];
+    let tasks = [];
 
     const statusLabel = { backlog: "Backlog", inprogress: "In progress", done: "Done" };
+
+
+    async function fetchSummary() {
+        const res = await fetch("/api/summary_json");
+        if (!res.ok) throw new Error(`Failed to load summary: ${res.status}`);
+        const summary = await res.json();
+
+        people = summary.map(person => ({
+            peopleId: person.id || person.name,
+            name: person.name,
+            role: person.role || "engineer"
+        }));
+
+        tasks = summary.flatMap(person =>
+            (person.tasks || []).map(task => ({
+                taskId: task.taskId || task.id,
+                title: task.title,
+                peopleId: person.id || person.name,
+                status: task.status
+            }))
+        );
+
+        return summary;
+    }
+
+    async function postCreateTask(title) {
+        const res = await fetch("/api/task/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title })
+        });
+        if (!res.ok) throw new Error(`Failed to create task: ${res.status}`);
+        return await res.json();
+    }
+
+    async function postAssignTask(taskId, personId) {
+        const res = await fetch(`/api/task/${encodeURIComponent(taskId)}/assign`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ person_id: personId })
+        });
+        if (!res.ok) throw new Error(`Failed to assign task: ${res.status}`);
+        return await res.json();
+    }
+
+    async function postCreatePerson(name) {
+        const res = await fetch(`/api/people/${encodeURIComponent(name)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        });
+        if (!res.ok) throw new Error(`Failed to create engineer: ${res.status}`);
+        return await res.json();
+    }
 
     function renderRoster() {
         const roster = document.getElementById("roster");
@@ -157,6 +198,15 @@
         renderRoster();
         renderFormOptions();
         renderEngineerNav();
+    }
+
+    async function loadAndRenderAll() {
+        try {
+            await fetchSummary();
+            renderAll();
+        } catch (err) {
+            console.error("Error loading board data:", err)
+        }
     }
 
     document.getElementById("engineer-nav").addEventListener("change", e => {
