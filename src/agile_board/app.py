@@ -44,9 +44,10 @@ def create_app():
     def manager_view():
         return render_template("manager.html")
 
-    @app.route("/engineer/<name>")
-    def engineer_view(name):
-        return render_template("engineer.html", name=name)
+    @app.route("/engineer/<person_Id>")
+    def engineer_view(person_Id):
+        person = AgileBoard(get_db()).get_person(person_Id)
+        return render_template("engineer.html", person_id=person_Id, name=person.name)
 
     @app.route("/api/summary_json", methods=(["GET"]))
     def whole_summary():
