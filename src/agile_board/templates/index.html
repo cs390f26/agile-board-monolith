@@ -107,7 +107,7 @@
 
     function percentDone(list) {
         if (list.length === 0) return 0;
-        return Math.round(list.filter(t => t.status === "done").length / list.length * 100);
+        return Math.round((list.filter(t => t.status === "done").length / list.length) * 100);
     }
 
     function buildCard(task) {

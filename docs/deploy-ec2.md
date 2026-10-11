@@ -2,6 +2,7 @@ Deploy on ec2
 --------------
 This document explains how to run the monolithic voting app on an EC2 instance.
 
+# Manual Deployment
 1) Launch an EC2 instance
    - Go to the AWS Management Console and navigate to the EC2 service.
    - Click on "Launch Instance" and select an Amazon Machine Image (AMI) of your choice (e.g., Ubuntu Server).
@@ -30,3 +31,14 @@ This document explains how to run the monolithic voting app on an EC2 instance.
        ```
        sudo systemctl status agile_board.service
        ```
+       
+# Automated Deployment
+
+1) Give permissons to script 
+    - `chmod +x scripts/up-ec2.sh`
+2) Add aws credentials to file
+    - `nano ~/.aws/credentials.txt`
+3) Run script 
+    - `./scripts/up-ec2.sh`
+4) Script will create ec2, security group, and deploy the app.
+    - Check status of the app with `http://<ipv4_address>`
