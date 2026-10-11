@@ -211,55 +211,56 @@
 
     document.getElementById("engineer-nav").addEventListener("change", e => {
         const name = e.target.value;
-        if (!name) return;
         // Static mockup: query string. In the Flask app this becomes
         // url_for('engineer_view', name=name), i.e. /engineer/<name>.
-        window.location.href = "engineer.html?name=" + encodeURIComponent(name);
+        if (name) window.location.href = "engineer.html?name=" + encodeURIComponent(name);
     });
 
     // Create task -- stands in for POST /api/task
-    document.getElementById("create-task-form").addEventListener("submit", e => {
+    document.getElementById("create-task-form").addEventListener("submit", async e => {
         e.preventDefault();
         const titleInput = document.getElementById("task-title");
         const title = titleInput.value.trim();
         if (!title) return;
 
-        tasks.push({
-            taskId: "t" + (tasks.length + 1),
-            title,
-            peopleId: null,
-            status: "backlog"
-        });
-
-        titleInput.value = "";
-        renderAll();
+        try {
+            await postCreateTask(title);
+            titleInput.value = "";
+            await loadAndRenderAll();
+        } catch (err) {
+            console.error("Error creating task:", err)
+        }
     });
 
-    document.getElementById("assign-task-form").addEventListener("submit", e => {
+    document.getElementById("assign-task-form").addEventListener("submit", async e => {
         e.preventDefault();
         const taskId = document.getElementById("assign-task-select").value;
         const personId = document.getElementById("assign-person-select").value;
 
-        const task = tasks.find(t => t.taskId === taskId);
-        if (task) task.peopleId = personId;
-
-        renderAll();
+        try {
+            await postAssignTask(taskId, personId);
+            await loadAndRenderAll();
+        } catch (err) {
+            console.error("Error assigning task:", err)
+        }
     });
 
-    document.getElementById("add-engineer-form").addEventListener("submit", e => {
+    document.getElementById("add-engineer-form").addEventListener("submit", async e => {
         e.preventDefault();
         const nameInput = document.getElementById("engineer-name");
         const name = nameInput.value.trim();
         if (!name) return;
 
-        const peopleId = "p" + (people.length + 1);
-        people.push({ peopleId, name, role: "engineer" });
-
-        nameInput.value = "";
-        renderAll();
+        try {
+            await postCreatePerson(name);
+            nameInput.value = "";
+            await loadAndRenderAll()
+        } catch (err) {
+            console.error("Error adding engineer:", err);
+        }
     });
 
-    renderAll();
+    loadAndRenderAll();
 </script>
 </body>
 </html>
