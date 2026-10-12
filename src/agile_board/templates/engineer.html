@@ -45,39 +45,91 @@
 </main>
 
 <script>
-    const tasks = [
-        { id: 1, title: "Design database schema", status: "backlog" },
-        { id: 2, title: "Set up CI pipeline", status: "backlog" },
-        { id: 3, title: "Write API documentation", status: "backlog" },
-        { id: 4, title: "Add rate limiting to login", status: "backlog" },
-        { id: 5, title: "Implement auth endpoints", status: "inprogress" },
-        { id: 6, title: "Build ticket list component", status: "inprogress" },
-        { id: 7, title: "Configure Terraform state bucket", status: "done" },
-        { id: 8, title: "Create project repo", status: "done" }
-    ];
-
+    const currentPersonId = "{{ person_id }}";
+    const tasks = [];
     const zones = document.querySelectorAll(".dropzone");
+
+    async function fetchEngineerTasks() {
+        const res = await fetch(`/api/people/${encodeURIComponent(currentPersonId)}/tasks`);
+        if (!res.ok) throw new Error(`Failed to fetch tasks: ${res.status}`);
+        const data = await res.json();
+        tasks = Array.isArray(data) ? data : (data.tasks || []);
+        return tasks;
+    }
+
+    async function postTaskInProgress(taskId) {
+        const res = await fetch(`/api/task/${encodeURIComponent(taskId)}/${encodeURIComponent(currentPersonId)}/inprogress`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+        if (!res.ok) throw new Error(`Failed to update task to inprogress: ${res.status}`);
+        return await res.json();
+    }
+
+    async function postTaskDone(taskId) {
+        const res = await fetch(`/api/task/${encodeURIComponent(taskId)}/${encodeURIComponent(currentPersonId)}/done`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+        if (!res.ok) throw new Error(`Failed to update task to done: ${res.status}`);
+        return await res.json();
+    }
+    
 
     function buildCard(task) {
         const card = document.createElement("div");
         card.className = "card";
         card.draggable = true;
-        card.dataset.id = task.id;
+        card.dataset.id = task.id || task.taskId;
 
         const label = document.createElement("span");
-        label.textContent = task.title;
+        label.textContent = task.title || task.name;
         card.appendChild(label);
 
         card.addEventListener("dragstart", () => card.classList.add("dragging"));
         card.addEventListener("dragend", () => {
             card.classList.remove("dragging");
             zones.forEach(z => z.classList.remove("over"));
-            syncBoard();
+            await syncBoard();
         });
         return card;
     }
 
-    function cardAfterCursor(zone, y) {
+    async function syncBoard() {
+        zones.forEach(zone => {
+            const cards = zone.querySelectorAll(".card");
+            cards.forEach(async card => {
+                const task = tasks.find(t => String(t.id) === card.dataset.id);
+                if (task && task.status !== zone.dataset.status) {
+                    const newStatus = zone.dataset.status;
+                    task.status = newStatus;
+
+                    try {
+                        if (newStatus === "inprogress") {
+                            await postTaskInProgress(task.id || task.taskId);
+                        } else if (newStatus === "done") {
+                            await postTaskDone(task.id || task.taskId);
+                        }
+                    } catch (err) {
+                        console.error("Failed to update status on server:", err);
+                    }
+                }
+            });
+            document.getElementById("count-" + zone.id).textContent = cards.length;
+
+            let empty = zone.querySelector(".empty");
+            if (cards.length === 0 && !empty) {
+                empty = document.createElement("div");
+                empty.className = "empty";
+                empty.textContent = "No tickets here";
+                zone.appendChild(empty);
+            } else if (cards.length > 0 && empty) {
+                empty.remove();
+            }
+        });
+    }
+
+        function cardAfterCursor(zone, y) {
         const others = [...zone.querySelectorAll(".card:not(.dragging)")];
         let closest = { offset: Number.NEGATIVE_INFINITY, el: null };
         others.forEach(el => {
@@ -88,7 +140,8 @@
         return closest.el;
     }
 
-    zones.forEach(zone => {
+    function setupDragAndDrop() {
+        zones.forEach(zone => {
         zone.addEventListener("dragover", e => {
             e.preventDefault();
             zone.classList.add("over");
@@ -105,31 +158,23 @@
         });
         zone.addEventListener("drop", e => e.preventDefault());
     });
-
-    function syncBoard() {
-        zones.forEach(zone => {
-            const cards = zone.querySelectorAll(".card");
-            cards.forEach(card => {
-                const task = tasks.find(t => String(t.id) === card.dataset.id);
-                if (task) task.status = zone.dataset.status;
-            });
-            document.getElementById("count-" + zone.id).textContent = cards.length;
-
-            let empty = zone.querySelector(".empty");
-            if (cards.length === 0 && !empty) {
-                empty = document.createElement("div");
-                empty.className = "empty";
-                empty.textContent = "No tickets here";
-                zone.appendChild(empty);
-            } else if (cards.length > 0 && empty) {
-                empty.remove();
-            }
-        });
     }
-    tasks.forEach(task => {
-        document.getElementById(task.status).appendChild(buildCard(task));
-    });
-    syncBoard();
+
+    async function init() {
+        setupDragAndDrop();
+        try {
+            await fetchEngineerTasks();
+            tasks.forEach(task => {
+                const lane = document.getElementById(task.status);
+                if (lane) lane.appendChild(buildCard(task));
+            });
+            await syncBoard();
+        } catch (err) {
+            console.error("Error loading board:", err)
+        }
+    }
+
+    init();
 </script>
 </body>
 </html>
