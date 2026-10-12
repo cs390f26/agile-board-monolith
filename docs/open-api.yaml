@@ -53,13 +53,13 @@ paths:
       tags:
         - Pages
       parameters:
-        - name: name
+        - name: person_id
           in: path
           required: true
-          description: The engineer's name, as it appears in the URL (e.g., "jamell").
+          description: The engineer's id, as it appears in the URL (e.g., "1").
           schema:
-            type: string
-          example: jamell
+            type: integer
+          example: 1
       responses:
         '200':
           description: HTML engineer page, rendered for the given engineer
@@ -92,6 +92,34 @@ paths:
                   $ref: '#/components/schemas/PersonSummary'
 
   # ---------- Engineer API ----------
+
+  /api/people/<person_Id>/tasks:
+    get:
+      operationId: getPersonTasks
+      summary: Fetch all tasks of a given person's ID
+      description: Used only by the engineer page. Allows the engineer view to display all tasks of a specific person.
+      tags:
+        - Engineer
+      parameters:
+        - name: person_Id
+          in: path
+          required: true
+          description: The unique identifier of the person
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: List of tasks assigned to the engineer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '404':
+          description: Person not found
+
 
   /api/task/{taskId}/inprogress:
     post:
@@ -251,3 +279,35 @@ paths:
                 $ref: '#/components/schemas/Person'
         '400':
           description: Invalid request body, or peopleId already exists
+          
+components:
+  schemas:
+    Task:
+      type: object
+      required:
+        - taskId
+        - title
+        - status
+        - personId
+      properties:
+        taskId:
+          type: integer
+          description: Unique task ID
+          example: 12
+        title:
+          type: string
+          description: Description or title of the task
+          example: "Fix bug in login flow"
+        status:
+          type: string
+          description: Task status mapped to API standard
+          enum:
+            - backlog
+            - inprogress
+            - done
+          example: "inprogress"
+        personId:
+          type: integer
+          nullable: true
+          description: ID of the assigned person
+          example: 1

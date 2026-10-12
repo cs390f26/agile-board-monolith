@@ -44,18 +44,18 @@ def create_app():
     def manager_view():
         return render_template("manager.html")
 
-    @app.route("/engineer/<person_Id>")
-    def engineer_view(person_Id):
-        person = AgileBoard(get_db()).get_person(person_Id)
-        return render_template("engineer.html", person_id=person_Id, name=person.name)
+    @app.route("/engineer/<person_id>")
+    def engineer_view(person_id):
+        person = AgileBoard(get_db()).get_person(person_id)
+        return render_template("engineer.html", person_id=person_id, name=person.name)
 
     @app.route("/api/summary_json", methods=(["GET"]))
     def whole_summary():
         return AgileBoard(get_db()).get_summary()
 
-    @app.route("/api/people/<person_Id>/tasks", methods=(["GET"]))
-    def engineer_summary(person_Id):
-        return AgileBoard(get_db()).get_engineer_tasks(person_Id)
+    @app.route("/api/people/<person_id>/tasks", methods=(["GET"]))
+    def engineer_summary(person_id):
+        return AgileBoard(get_db()).get_engineer_tasks(person_id)
 
     @app.route("/api/task/", methods=(["POST"]))
     def create_task():
@@ -65,15 +65,15 @@ def create_app():
     def assign_task():
         return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
 
-    @app.route("/api/task/<task_Id>/<person_Id>/inprogress", methods=(["POST"]))
+    @app.route("/api/task/<task_Id>/<person_id>/inprogress", methods=(["POST"]))
     def update_task_in_progress():
         return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
 
-    @app.route("/api/task/<task_Id>/<person_Id>/done", methods=(["POST"]))
+    @app.route("/api/task/<task_Id>/<person_id>/done", methods=(["POST"]))
     def update_task_done():
         return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
 
-    @app.route("/api/people/<person_Id>", methods=(["POST"]))
+    @app.route("/api/people/<person_id>", methods=(["POST"]))
     def create_person():
         return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
 
