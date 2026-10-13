@@ -1,4 +1,5 @@
 import os
+import atexit
 
 from dotenv import load_dotenv
 from flask import Flask, abort, current_app, render_template, request
@@ -35,6 +36,7 @@ def create_app():
         db.init_db(conn)
 
     app.teardown_appcontext(close_db)
+    atexit.register(app.pool.close)
 
     @app.route("/")
     def index_page():
