@@ -1,12 +1,12 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, current_app, render_template
+from flask import Flask, abort, current_app, render_template, request
 from flask import g as req_cache
 from psycopg_pool import ConnectionPool
 
 from agile_board import db
-from agile_board.agile_board import AgileBoard
+from agile_board.agile_board import AgileBoard, InvalidInputError, NotFoundError
 
 
 def get_db():
@@ -44,10 +44,13 @@ def create_app():
     def manager_view():
         return render_template("manager.html")
 
-    @app.route("/engineer/<person_id>")
+    @app.route("/engineer/<int:person_id>")
     def engineer_view(person_id):
-        person = AgileBoard(get_db()).get_person(person_id)
-        return render_template("engineer.html", person_id=person_id, name=person.name)
+        try:
+            person = AgileBoard(get_db()).get_person(person_id)
+        except NotFoundError:
+            abort(404)
+        return render_template("engineer.html", person_id=person_id, name=person["name"])
 
     @app.route("/api/summary_json", methods=(["GET"]))
     def whole_summary():
@@ -59,22 +62,37 @@ def create_app():
 
     @app.route("/api/task/", methods=(["POST"]))
     def create_task():
-        return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
+        body = request.get_json(silent=True) or {}
+        return AgileBoard(get_db()).create_task(body.get("title")), 201
 
-    @app.route("/api/task/<task_Id>/assign", methods=(["POST"]))
-    def assign_task():
-        return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
+    @app.route("/api/task/<int:task_id>/assign", methods=(["POST"]))
+    def assign_task(task_id):
+        body = request.get_json(silent=True) or {}
+        try:
+            person_id = int(body.get("person_id"))
+        except (TypeError, ValueError):
+            raise InvalidInputError("person_id must be an integer")
+        return AgileBoard(get_db()).assign_task(task_id, person_id)
 
-    @app.route("/api/task/<task_Id>/<person_id>/inprogress", methods=(["POST"]))
-    def update_task_in_progress():
-        return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
+    @app.route("/api/task/<int:task_id>/<int:person_id>/inprogress", methods=(["POST"]))
+    def update_task_in_progress(task_id, person_id):
+        return AgileBoard(get_db()).move_task(task_id, "inprogress")
 
-    @app.route("/api/task/<task_Id>/<person_id>/done", methods=(["POST"]))
-    def update_task_done():
-        return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
+    @app.route("/api/task/<int:task_id>/<int:person_id>/done", methods=(["POST"]))
+    def update_task_done(task_id, person_id):
+        return AgileBoard(get_db()).move_task(task_id, "done")
 
-    @app.route("/api/people/<person_id>", methods=(["POST"]))
+    @app.route("/api/people", methods=(["POST"]))
     def create_person():
-        return {"name": "John Doe", "tasks": ["Task 1", "Task 2"]}
+        body = request.get_json(silent=True) or {}
+        return AgileBoard(get_db()).create_person(body.get("name")), 201
+
+    @app.errorhandler(InvalidInputError)
+    def handle_invalid_input(err):
+        return {"error": str(err)}, 400
+
+    @app.errorhandler(NotFoundError)
+    def handle_not_found(err):
+        return {"error": str(err)}, 404
 
     return app

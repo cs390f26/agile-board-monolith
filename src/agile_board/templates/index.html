@@ -95,14 +95,14 @@
 
         people.forEach(person => {
             const opt = document.createElement("option");
-            opt.value = person.name;
+            opt.value = person.personId;
             opt.textContent = person.name;
             select.appendChild(opt);
         });
     }
 
-    function engineerUrl(name) {
-        return "/engineer/" + encodeURIComponent(name);
+    function engineerUrl(personId) {
+        return "/engineer/" + encodeURIComponent(personId);
     }
 
     function percentDone(list) {
@@ -123,7 +123,7 @@
         if (task.engineer) {
             const engineer = document.createElement("a");
             engineer.className = "card-engineer";
-            engineer.href = engineerUrl(task.engineer);
+            engineer.href = engineerUrl(task.personId);
             engineer.textContent = task.engineer;
             card.appendChild(engineer);
         } else {
@@ -170,7 +170,7 @@
 
             const tile = document.createElement("a");
             tile.className = "member";
-            tile.href = engineerUrl(person.name);
+            tile.href = engineerUrl(person.personId);
 
             const head = document.createElement("div");
             head.className = "member-head";

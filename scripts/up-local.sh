@@ -31,14 +31,19 @@ fi
 PGPORT=$(psql postgres -t -A -c "SHOW port;" 2>/dev/null || echo "5432")
 echo "PostgreSQL is running on port: ${PGPORT}"
 
-# Database Reset (Drop existing & recreate fresh)
-echo "Resetting local databases..."
-psql postgres -c "DROP DATABASE IF EXISTS agile_board WITH (FORCE);" >/dev/null 2>&1 || psql postgres -c "DROP DATABASE IF EXISTS agile_board;"
-psql postgres -c "DROP DATABASE IF EXISTS agile_board_test WITH (FORCE);" >/dev/null 2>&1 || psql postgres -c "DROP DATABASE IF EXISTS agile_board_test;"
+# App database: create only if missing so data survives restarts
+if [ "$(psql postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'agile_board';")" = "1" ]; then
+    echo "Database 'agile_board' already exists; keeping its data."
+else
+    psql postgres -c "CREATE DATABASE agile_board;"
+    echo "Database 'agile_board' created."
+fi
 
-psql postgres -c "CREATE DATABASE agile_board;"
+# Test database: always reset for clean test runs
+echo "Resetting test database..."
+psql postgres -c "DROP DATABASE IF EXISTS agile_board_test WITH (FORCE);" >/dev/null 2>&1 || psql postgres -c "DROP DATABASE IF EXISTS agile_board_test;"
 psql postgres -c "CREATE DATABASE agile_board_test;"
-echo "Databases 'agile_board' and 'agile_board_test' recreated."
+echo "Database 'agile_board_test' recreated."
 
 # Generate/Update .env File
 echo "Writing .env configuration..."
@@ -49,6 +54,10 @@ EOF
 
 # Export variables to script environment
 export $(grep -v '^#' .env | xargs)
+
+# Load demo data (engineers + tasks)
+echo "Seeding demo data..."
+psql "$DB_URL" -q -f scripts/seed.sql
 
 # 5. Run the Web Application
 echo "Starting Gunicorn server on http://127.0.0.1:8000 ..."

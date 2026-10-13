@@ -44,6 +44,12 @@ class AgileBoard:
             summary.append({"personId": None, "name": None, "tasks": tasks_by_person[None]})
         return summary
 
+    def get_person(self, person_id: int) -> dict:
+        person = db.get_person_by_id(self.conn, person_id)
+        if person is None:
+            raise NotFoundError(f"person {person_id} not found")
+        return self._person_to_dict(person)
+
     def get_people(self) -> list[dict]:
         return [self._person_to_dict(p) for p in db.get_all_people(self.conn)]
 
