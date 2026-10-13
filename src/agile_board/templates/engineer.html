@@ -46,7 +46,7 @@
 
 <script>
     const currentPersonId = "{{ person_id }}";
-    const tasks = [];
+    let tasks = [];
     const zones = document.querySelectorAll(".dropzone");
 
     async function fetchEngineerTasks() {
@@ -87,7 +87,7 @@
         card.appendChild(label);
 
         card.addEventListener("dragstart", () => card.classList.add("dragging"));
-        card.addEventListener("dragend", () => {
+        card.addEventListener("dragend", async () => {
             card.classList.remove("dragging");
             zones.forEach(z => z.classList.remove("over"));
             await syncBoard();
@@ -99,7 +99,7 @@
         zones.forEach(zone => {
             const cards = zone.querySelectorAll(".card");
             cards.forEach(async card => {
-                const task = tasks.find(t => String(t.id) === card.dataset.id);
+                const task = tasks.find(t => String(t.taskId) === card.dataset.id);
                 if (task && task.status !== zone.dataset.status) {
                     const newStatus = zone.dataset.status;
                     task.status = newStatus;

@@ -74,8 +74,9 @@
         if (!res.ok) throw new Error(`Failed to load summary: ${res.status}`);
         const summary = await res.json();
 
-        people = summary.map(person => ({
-            personId: person.id || person.name,
+        // The unassigned-tasks group comes back with name: null; it isn't a person.
+        people = summary.filter(person => person.name !== null).map(person => ({
+            personId: person.personId,
             name: person.name,
             role: person.role || "engineer"
         }));
@@ -84,7 +85,7 @@
             (person.tasks || []).map(task => ({
                 taskId: task.taskId || task.id,
                 title: task.title,
-                personId: person.id || person.name,
+                personId: person.personId,
                 status: task.status
             }))
         );
@@ -126,7 +127,11 @@
         const roster = document.getElementById("roster");
         roster.innerHTML = "";
 
-        people.forEach(person => {
+        // Unassigned tasks have personId null, so this row collects them.
+        const rows = [...people];
+        if (tasks.some(t => t.personId === null)) rows.push({ personId: null, name: "Unassigned" });
+
+        rows.forEach(person => {
             const row = document.createElement("div");
             row.className = "roster-row";
 
