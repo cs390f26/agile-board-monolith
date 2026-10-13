@@ -1,5 +1,5 @@
-import os
 import atexit
+import os
 
 from dotenv import load_dotenv
 from flask import Flask, abort, current_app, render_template, request
