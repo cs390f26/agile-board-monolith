@@ -50,6 +50,10 @@ EOF
 # Export variables to script environment
 export $(grep -v '^#' .env | xargs)
 
+# Load demo data (engineers + tasks)
+echo "Seeding demo data..."
+psql "$DB_URL" -q -f scripts/seed.sql
+
 # 5. Run the Web Application
 echo "Starting Gunicorn server on http://127.0.0.1:8000 ..."
 PYTHONPATH=src gunicorn 'agile_board.app:create_app()' --bind 127.0.0.1:8000

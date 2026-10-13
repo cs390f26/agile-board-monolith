@@ -14,9 +14,11 @@ This document explains how to deploy the Agile Board Web App locally on your mac
    - Start Postgresql server `brew services start postgresql` or `brew services run postgresql` to not have it restart on boot time.
 4) Clone the repository
    - Clone the Agile Board Web App repository from GitHub in an ide or terminal using the following command `https://github.com/cs390f26/agile-board-monolith.git`
-4) Give permissions to run script
+5) Give permissions to run script
    - Activate permissions for run script `chmod +x scripts/up-local.sh`.
-5) Run the app
+6) Seed Dummy Data
+   - Seed the dummy data using `PYTHONPATH=src python -m agile_board.seed`.
+7) Run the app
    - Run the app using `./scripts/up-local.sh`.
 
 ## Run pytest
