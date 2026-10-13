@@ -1,3 +1,4 @@
+import atexit
 import os
 
 from dotenv import load_dotenv
@@ -35,6 +36,7 @@ def create_app():
         db.init_db(conn)
 
     app.teardown_appcontext(close_db)
+    atexit.register(app.pool.close)
 
     @app.route("/")
     def index_page():
